@@ -6,6 +6,7 @@ pydantic<2.10         # Pinning this often helps avoid GDSFactory version confli
 opencv-python         # For the grid overlay and basic vision
 numpy                 # Required for image math
 matplotlib            # For plotting debug graphs if needed
+Pillow                # Required for Gemini image processing
 
 # AI & API Interaction
 openai                # If using GPT-4o

@@ -11,3 +11,4 @@ env/
 vision/input_images/*
 vision/debug_output/*
 !vision/input_images/.gitkeep  
+.env

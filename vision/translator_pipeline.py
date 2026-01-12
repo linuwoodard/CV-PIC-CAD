@@ -3,25 +3,83 @@ Main translator pipeline for converting hand-drawn circuit schematics to GDS.
 This script orchestrates the vision processing workflow.
 """
 
+import base64
 import cv2
+import os
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv()
+api_key = os.getenv("GEMINI_API_KEY")
 
 from overlay_grid import overlay_grid_on_image
 from grid_tools import GridMapper
 
 
-def send_to_vision_model(image_path: str):
+def send_to_vision_model(image_path: str, system_prompt: str = None):
     """
-    Placeholder function for sending image to OpenAI/Gemini vision API.
+    Send image to Gemini 1.5 Pro vision API.
     
     Args:
         image_path: Path to the grid-tagged image
+        system_prompt: Optional system prompt (default: None)
     
     Returns:
-        None (placeholder)
+        Raw string response from the vision model
+    
+    Raises:
+        FileNotFoundError: If image_path doesn't exist
+        ValueError: If API key is not set or other validation errors
+        ConnectionError: If API connection fails
     """
-    pass
+    image_path_obj = Path(image_path)
+    if not image_path_obj.exists():
+        raise FileNotFoundError(f"Image not found: {image_path}")
+    
+    # Encode image to base64
+    with open(image_path_obj, "rb") as image_file:
+        base64_image = base64.b64encode(image_file.read()).decode('utf-8')
+    
+    # User prompt as specified
+    user_prompt = "Analyze this image. Identify the optical components and their approximate grid locations."
+    
+    try:
+        import google.generativeai as genai
+    except ImportError:
+        raise ImportError("google-generativeai library not installed. Run: pip install google-generativeai")
+    
+    # Get API key from environment variable
+    if not api_key:
+        raise ValueError("GEMINI_API_KEY environment variable not set")
+    
+    try:
+        genai.configure(api_key=api_key)
+        
+        # Create model
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        
+        # Build prompt (Gemini doesn't have separate system/user roles, so combine them)
+        full_prompt = user_prompt
+        if system_prompt:
+            full_prompt = f"{system_prompt}\n\n{user_prompt}"
+        
+        # Prepare content - decode base64 and create PIL Image
+        import PIL.Image
+        import io
+        
+        image_data = base64.b64decode(base64_image)
+        image = PIL.Image.open(io.BytesIO(image_data))
+        
+        # Make API call
+        response = model.generate_content([full_prompt, image])
+        
+        # Return raw response text
+        if not response.text:
+            raise ValueError("Empty response from Gemini API")
+        return response.text
+        
+    except Exception as e:
+        raise ConnectionError(f"API connection error: {str(e)}")
 
 
 def main(input_image_path: str = None, output_dir: Path = None):
@@ -75,9 +133,25 @@ def main(input_image_path: str = None, output_dir: Path = None):
     # Print console log
     print(f"Prepared image for AI. Grid Cell A1 corresponds to pixel ({x}, {y})")
     
-    # Placeholder: send to vision model
+    # Send to vision model
     print("Sending to vision model...")
-    send_to_vision_model(str(output_image_path))
+    try:
+        response = send_to_vision_model(str(output_image_path))
+        print("\nVision model response:")
+        print("-" * 50)
+        print(response)
+        print("-" * 50)
+        
+        # Save response to file
+        response_path = output_dir / f"{input_path.stem}_ai_response.txt"
+        with open(response_path, "w", encoding="utf-8") as f:
+            f.write(response)
+        print(f"\nResponse saved to: {response_path}")
+        
+    except (ConnectionError, ValueError, ImportError, FileNotFoundError) as e:
+        print(f"Warning: Vision model API call failed: {e}")
+        print("Continuing without AI analysis...")
+        response = None
     
     print("Pipeline completed successfully!")
     return str(output_image_path)
