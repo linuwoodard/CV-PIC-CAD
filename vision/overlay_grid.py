@@ -123,7 +123,8 @@ def overlay_grid_on_image(input_path: str, output_path: str = None) -> np.ndarra
 
 if __name__ == "__main__":
     # Test on a dummy image named test.jpg
-    test_image_path = Path(__file__).parent / "input_images" / "test.jpg"
+    test_image_path = Path(__file__).parent / "input_images" / "GDS CV-2.jpg"
+    output_path = Path(__file__).parent / "debug_output" / "GDS CV-2_grid_overlay.jpg"
     
     # Create a dummy test image if it doesn't exist
     if not test_image_path.exists():
@@ -134,7 +135,7 @@ if __name__ == "__main__":
     
     # Test the function
     try:
-        result = overlay_grid_on_image(str(test_image_path))
+        result = overlay_grid_on_image(str(test_image_path), str(output_path))
         print("Grid overlay test completed successfully!")
         print(f"Result image shape: {result.shape}")
     except Exception as e:
