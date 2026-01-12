@@ -1,0 +1,36 @@
+name: hand_drawn_circuit
+instances:
+  gc_in:
+    component: grating_coupler
+    settings:
+      polarization: te
+  mzi_1:
+    component: mzi
+    settings:
+      delta_length: 10.0
+  dc_1:
+    component: dichroic
+  dc_2:
+    component: dichroic
+  rt:
+    component: racetrack
+    settings:
+      radius: 10
+  ec:
+    component: edge_coupler
+
+placements:
+  gc_in:
+    x: 0
+    y: 0
+    rotation: 180
+  mzi_1:
+    x: 100
+    y: 0
+
+routes:
+  optical_link_1:
+    links:
+      gc_in,o1: mzi_1,o1
+    settings:
+      cross_section: strip
