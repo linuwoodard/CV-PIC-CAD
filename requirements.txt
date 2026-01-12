@@ -1,4 +1,16 @@
-gdsfactory
-pylsp
-opencv-python
-numpy
+# Core Photonics & Layout
+gdsfactory==8.16.0    # The main tool for generating the GDS
+pydantic<2.10         # Pinning this often helps avoid GDSFactory version conflicts
+
+# Vision & Image Processing
+opencv-python         # For the grid overlay and basic vision
+numpy                 # Required for image math
+matplotlib            # For plotting debug graphs if needed
+
+# AI & API Interaction
+openai                # If using GPT-4o
+google-generativeai   # If using Gemini 1.5 Pro
+pyyaml                # To parse the output from the AI
+
+# Utilities
+ipykernel             # Allows you to run code cells inside Cursor/VS Code
