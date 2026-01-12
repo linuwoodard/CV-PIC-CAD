@@ -1,2 +1,4 @@
 gdsfactory
 pylsp
+opencv-python
+numpy

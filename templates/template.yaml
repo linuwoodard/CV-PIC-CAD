@@ -1,36 +1,149 @@
-name: hand_drawn_circuit
+# circuit_template.yaml
+name: my_optical_circuit
+# 1. INSTANCES: The "Ingredients" list.
+# The AI must identify which components exist and give them unique names.
 instances:
-  gc_in:
-    component: grating_coupler
-    settings:
-      polarization: te
-  mzi_1:
-    component: mzi
-    settings:
-      delta_length: 10.0
-  dc_1:
-    component: dichroic
-  dc_2:
-    component: dichroic
-  rt:
-    component: racetrack
-    settings:
-      radius: 10
-  ec:
-    component: edge_coupler
-
+    # --- Input Couplers ---
+    ec_input_1:
+        component: tapered_input_coupler
+        settings:
+            wgWidth: 1.2         # Fixed
+            taperWidth: 0.5      # User to define
+            taperLength: 200     # User to define
+            dicingClearance: 50  # User to define
+            isTab: true          # true/false
+    ec_input_2:
+        component: tapered_input_coupler
+        settings:
+            wgWidth: 1.2
+            taperWidth: 0.5
+            taperLength: 200
+            dicingClearance: 50
+            isTab: true
+    # --- Tunable Beam Splitters (TBS) ---
+    tbs_1:
+        component: mzi_heater
+        settings:
+            isSymmetric: false   # boolean
+            lengthMismatch: 50   # if isSymmetric == false
+            couplerGap: 0.2
+            couplerLength: 10
+            wgSpacing: 5
+            bendRadius: 10
+            eulerP: 0.5          # Euler p-factor
+            bendAngle: 90
+            heaterWidth: 2
+            heaterDisplacement: 2
+            heaterLength: 100
+    tbs_2:
+        component: mzi_heater
+        settings:
+            isSymmetric: true
+            # lengthMismatch: 0  # Not needed if symmetric
+            couplerGap: 0.2
+            couplerLength: 10
+            wgSpacing: 5
+            bendRadius: 10
+            eulerP: 0.5
+            bendAngle: 90
+            heaterWidth: 2
+            heaterDisplacement: 2
+            heaterLength: 100
+    # --- Thermo-optic Phase Shifters ---
+    phase_shifter_1:
+        component: straight_heater
+        settings:
+            heaterWidth: 2
+            heaterDisplacement: 2
+            heaterLength: 200
+    phase_shifter_2:
+        component: straight_heater
+        settings:
+            heaterWidth: 2
+            heaterDisplacement: 2
+            heaterLength: 200
+    # --- Racetracks ---
+    # (Included example in case your design needs one later)
+    racetrack_1:
+        component: racetrack_resonator
+        settings:
+            straightLength: 50
+            bendRadius: 10
+            eulerP: 0.5
+    # --- Directional Couplers ---
+    dc_coupler_1:
+        component: directional_coupler
+        settings:
+            couplingGap: 0.2
+            couplerLength: 20
+            bendRadius: 10
+            eulerP: 0.5
+            bendAngle: 15
+            wgSpacing: 2
+    # --- Poling Regions ---
+    poling_region_1:
+        component: poling_electrode
+        settings:
+            polingPeriod: 10
+            dutyCycle: 0.5
+            fingerLength: 5
+            fingerSpacing: 2
+    # --- Grating Couplers (Fixed Design) ---
+    gc_tap_1:
+        component: grating_coupler
+        # No settings required as design is fixed
+    # --- Output Couplers ---
+    out_coupler_1:
+        component: double_tapered_output
+        settings:
+            wgWidth: 1.2         # Fixed
+            taperWidth: 2.0      # Output width often larger
+            taperLength: 200
+            dicingClearance: 50
+            isTab: false
+# 2. PLACEMENTS: Rough coordinates.
+# The AI extracts relative positions; the Architect's code can snap these to a grid.
 placements:
-  gc_in:
-    x: 0
-    y: 0
-    rotation: 180
-  mzi_1:
-    x: 100
-    y: 0
-
+    ec_input_1:
+        x: 0
+        y: 0
+        rotation: 0
+    ec_input_2:
+        x: 0
+        y: 127 # Standard fiber array pitch
+    tbs_bottom:
+        x: 300
+        y: 60
+    phase_shifter_top:
+        x: 600
+        y: 100
+    phase_shifter_bot:
+        x: 600
+        y: 20
+    tbs_top:
+        x: 1000
+        y: 200
+    out_coupler_1:
+        x: 1500
+        y: 200
+# 3. ROUTES: The "Wiring" instructions.
+# Connects ports (o1, o2, etc.).
 routes:
-  optical_link_1:
-    links:
-      gc_in,o1: mzi_1,o1
-    settings:
-      cross_section: strip
+    # Route from Input EC to the first Tunable Beam Splitter
+    route_in_to_tbs:
+        links:
+            ec_input_1,o1: tbs_bottom,o1
+            ec_input_2,o1: tbs_bottom,o2
+        settings:
+            cross_section: strip # Define your waveguide cross-section here
+            width: 1.2           # Global waveguide width applied here
+            radius: 10           # Euler bend radius constraint
+    # Route from TBS to the Phase Shifters
+    route_tbs_to_ps:
+        links:
+            tbs_bottom,o1: phase_shifter_top,o1
+            tbs_bottom,o2: phase_shifter_bot,o1
+
+
+
+
