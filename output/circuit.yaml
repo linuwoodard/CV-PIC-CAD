@@ -1,0 +1,27 @@
+instances:
+  grating_coupler_1:
+    component: grating_coupler
+    settings: {}
+  grating_coupler_2:
+    component: grating_coupler
+    settings: {}
+  mzi_heater_1:
+    component: mzi_heater
+    settings: {}
+placements:
+  grating_coupler_1:
+    x: 1375
+    y: 1043
+  grating_coupler_2:
+    x: 1960
+    y: 1043
+  mzi_heater_1:
+    x: 1668
+    y: 2222
+routes:
+  route_1:
+    links:
+      grating_coupler_1,o1: mzi_heater_1,o1
+  route_2:
+    links:
+      grating_coupler_2,o1: mzi_heater_1,o2

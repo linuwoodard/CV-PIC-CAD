@@ -6,7 +6,9 @@ This script orchestrates the vision processing workflow.
 import base64
 import cv2
 import os
+import re
 import sys
+import yaml
 from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv()
@@ -14,15 +16,16 @@ api_key = os.getenv("GEMINI_API_KEY")
 
 from overlay_grid import overlay_grid_on_image
 from grid_tools import GridMapper
+from prompts import GRID_SYSTEM_PROMPT, GRID_SYSTEM_PROMPT_V2
 
 
-def send_to_vision_model(image_path: str, system_prompt: str = None):
+def send_to_vision_model(image_path: str, system_prompt: str = GRID_SYSTEM_PROMPT_V2):
     """
     Send image to Gemini 1.5 Pro vision API.
     
     Args:
         image_path: Path to the grid-tagged image
-        system_prompt: Optional system prompt (default: None)
+        system_prompt: Optional system prompt (default: GRID_SYSTEM_PROMPT from prompts.py)
     
     Returns:
         Raw string response from the vision model
@@ -32,6 +35,7 @@ def send_to_vision_model(image_path: str, system_prompt: str = None):
         ValueError: If API key is not set or other validation errors
         ConnectionError: If API connection fails
     """
+
     image_path_obj = Path(image_path)
     if not image_path_obj.exists():
         raise FileNotFoundError(f"Image not found: {image_path}")
@@ -61,7 +65,7 @@ def send_to_vision_model(image_path: str, system_prompt: str = None):
         # Build prompt (Gemini doesn't have separate system/user roles, so combine them)
         full_prompt = user_prompt
         if system_prompt:
-            full_prompt = f"{system_prompt}\n\n{user_prompt}"
+            full_prompt = system_prompt
         
         # Prepare content - decode base64 and create PIL Image
         import PIL.Image
@@ -80,6 +84,92 @@ def send_to_vision_model(image_path: str, system_prompt: str = None):
         
     except Exception as e:
         raise ConnectionError(f"API connection error: {str(e)}")
+
+
+def parse_ai_response(response_text: str, mapper: GridMapper, output_path: Path = None):
+    """
+    Post-process AI response: strip markdown, parse YAML, convert grid references to integers.
+    
+    Args:
+        response_text: Raw string response from the AI (may contain markdown fencing)
+        mapper: GridMapper instance for converting grid references to pixel coordinates
+        output_path: Path to save the final YAML file (default: output/circuit.yaml)
+    
+    Returns:
+        Dictionary containing the parsed and processed circuit data
+    
+    Raises:
+        ValueError: If YAML parsing fails or placements section is missing
+    """
+    # Strip markdown fencing (like ```yaml or ```)
+    # Remove any markdown code blocks
+    text = response_text.strip()
+    
+    # Pattern to match markdown code fences (```yaml, ```yml, ```, etc.)
+    markdown_pattern = r'^```(?:yaml|yml)?\s*\n(.*?)\n```\s*$'
+    match = re.search(markdown_pattern, text, re.DOTALL | re.MULTILINE)
+    if match:
+        text = match.group(1)
+    else:
+        # Try to remove just the opening/closing fences if they exist separately
+        text = re.sub(r'^```(?:yaml|yml)?\s*\n', '', text, flags=re.MULTILINE)
+        text = re.sub(r'\n```\s*$', '', text, flags=re.MULTILINE)
+    
+    # Parse the string into a Python dictionary using yaml.safe_load
+    try:
+        circuit_dict = yaml.safe_load(text)
+        if circuit_dict is None:
+            raise ValueError("YAML parsing resulted in None - check if response contains valid YAML")
+    except yaml.YAMLError as e:
+        raise ValueError(f"Failed to parse YAML: {e}")
+    
+    # Check if placements section exists
+    if 'placements' not in circuit_dict:
+        raise ValueError("YAML does not contain a 'placements' section")
+    
+    # Loop through the placements section
+    placements = circuit_dict['placements']
+    for instance_name, placement_data in placements.items():
+        if not isinstance(placement_data, dict):
+            continue
+        
+        # Check x value
+        if 'x' in placement_data:
+            x_value = placement_data['x']
+            # If x is a string like 'C3', convert it to integer using GridMapper
+            if isinstance(x_value, str):
+                try:
+                    x_pixel, _ = mapper.get_center_of_cell(x_value)
+                    placement_data['x'] = x_pixel
+                except ValueError:
+                    # If conversion fails, keep the original value
+                    print(f"Warning: Could not convert x='{x_value}' for instance '{instance_name}', keeping original value")
+        
+        # Check y value
+        if 'y' in placement_data:
+            y_value = placement_data['y']
+            # If y is a string like 'C3', convert it to integer using GridMapper
+            if isinstance(y_value, str):
+                try:
+                    _, y_pixel = mapper.get_center_of_cell(y_value)
+                    placement_data['y'] = y_pixel
+                except ValueError:
+                    # If conversion fails, keep the original value
+                    print(f"Warning: Could not convert y='{y_value}' for instance '{instance_name}', keeping original value")
+    
+    # Set default output path if not provided
+    if output_path is None:
+        output_path = Path(__file__).parent.parent / "output" / "circuit.yaml"
+    
+    # Create output directory if it doesn't exist
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    # Save the final dictionary to output/circuit.yaml
+    with open(output_path, 'w', encoding='utf-8') as f:
+        yaml.dump(circuit_dict, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
+    
+    print(f"Processed circuit data saved to: {output_path}")
+    return circuit_dict
 
 
 def main(input_image_path: str = None, output_dir: Path = None):
@@ -147,6 +237,15 @@ def main(input_image_path: str = None, output_dir: Path = None):
         with open(response_path, "w", encoding="utf-8") as f:
             f.write(response)
         print(f"\nResponse saved to: {response_path}")
+        
+        # Parse and process the AI response
+        print("\nParsing AI response...")
+        try:
+            circuit_dict = parse_ai_response(response, mapper)
+            print("Successfully parsed and processed circuit data.")
+        except ValueError as e:
+            print(f"Warning: Failed to parse AI response: {e}")
+            print("Raw response saved, but YAML processing skipped.")
         
     except (ConnectionError, ValueError, ImportError, FileNotFoundError) as e:
         print(f"Warning: Vision model API call failed: {e}")
