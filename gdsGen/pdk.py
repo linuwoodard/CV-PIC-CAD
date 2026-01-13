@@ -1,9 +1,8 @@
 import gdsfactory as gf
+import numpy as np
 from functools import partial
 
-# --- 1. Tapered Input Coupler (Constructed Geometry) ---
-
-
+# --- 1. Tapered Input Coupler ---
 @gf.cell
 def tapered_input_coupler(
     taperLength: float = 200.0,
@@ -88,14 +87,10 @@ def tapered_input_coupler(
     return c
 
 
-# --- 2. MZI Heater (Configured Wrapper) ---
-import gdsfactory as gf
-import numpy as np
-
-# --- Helper for Tunable Beam Splitter ---
+# --- Helper for S-Bends ---
 def _create_precise_euler_sbend(cross_section, radius, angle, p, dy_target):
     """
-    Internal helper for tunable_beam_splitter.
+    Internal helper for mzi_no_heater and racetrack_resonator.
     Constructs an Euler S-Bend using Path extrusions with unit-scaling fixes.
     """
     # A. Define the Euler Spiral Path
@@ -157,8 +152,9 @@ def _create_precise_euler_sbend(cross_section, radius, angle, p, dy_target):
     return c
 
 
+# --- 2. MZI No Heater (Formerly tunable_beam_splitter) ---
 @gf.cell
-def tunable_beam_splitter(
+def mzi_no_heater(
     wg_width: float = 1.2,
     coupler_length: float = 255.0,
     coupler_gap: float = 1.0,
@@ -167,9 +163,10 @@ def tunable_beam_splitter(
     bend_radius: float = 210.0, 
     bend_angle: float = 20.0,
     bend_p: float = 0.5,
+    **kwargs
 ) -> gf.Component:
     """
-    Asymmetric Tunable Beam Splitter (MZI) with separated input/output ports.
+    Asymmetric MZI without heaters.
     - One arm is straight (bottom).
     - One arm bends (top).
     - Includes input/output fan-out to ensure ports are separated by 'arm_spacing'.
@@ -240,6 +237,8 @@ def tunable_beam_splitter(
     
     return c
 
+
+# --- 3. Euler Bend ---
 @gf.cell
 def euler_bend(
     radius: float = 210.0,
@@ -287,6 +286,8 @@ def euler_bend(
     
     return c
 
+
+# --- 4. Racetrack Resonator ---
 @gf.cell
 def racetrack_resonator(
     straightLength: float = 12000.0,
