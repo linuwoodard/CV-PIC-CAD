@@ -23,6 +23,8 @@ allowed_components:
       ports: 1
     ring_resonator:
       ports: 4
+    euler_bend:
+      ports: 2
     
 
 

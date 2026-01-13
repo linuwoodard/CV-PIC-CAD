@@ -16,10 +16,10 @@ api_key = os.getenv("GEMINI_API_KEY")
 
 from overlay_grid import overlay_grid_on_image
 from grid_tools import GridMapper
-from prompts import GRID_SYSTEM_PROMPT, GRID_SYSTEM_PROMPT_V2
+from prompts import GRID_SYSTEM_PROMPT_V3
 
 
-def send_to_vision_model(image_path: str, system_prompt: str = GRID_SYSTEM_PROMPT_V2):
+def send_to_vision_model(image_path: str, system_prompt: str = GRID_SYSTEM_PROMPT_V3):
     """
     Send image to Gemini 1.5 Pro vision API.
     
@@ -86,14 +86,15 @@ def send_to_vision_model(image_path: str, system_prompt: str = GRID_SYSTEM_PROMP
         raise ConnectionError(f"API connection error: {str(e)}")
 
 
-def parse_ai_response(response_text: str, mapper: GridMapper, output_path: Path = None):
+def parse_ai_response(response_text: str, mapper: GridMapper, output_path: Path = None, image_name: str = None):
     """
     Post-process AI response: strip markdown, parse YAML, convert grid references to integers.
     
     Args:
         response_text: Raw string response from the AI (may contain markdown fencing)
         mapper: GridMapper instance for converting grid references to pixel coordinates
-        output_path: Path to save the final YAML file (default: output/circuit.yaml)
+        output_path: Path to save the final YAML file (default: output/circuit_<image_name>.yaml)
+        image_name: Name of the input image (without extension) to include in filename
     
     Returns:
         Dictionary containing the parsed and processed circuit data
@@ -159,7 +160,11 @@ def parse_ai_response(response_text: str, mapper: GridMapper, output_path: Path 
     
     # Set default output path if not provided
     if output_path is None:
-        output_path = Path(__file__).parent.parent / "output" / "circuit.yaml"
+        if image_name:
+            filename = f"circuit_{image_name}.yaml"
+        else:
+            filename = "circuit.yaml"
+        output_path = Path(__file__).parent.parent / "output" / filename
     
     # Create output directory if it doesn't exist
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -241,7 +246,7 @@ def main(input_image_path: str = None, output_dir: Path = None):
         # Parse and process the AI response
         print("\nParsing AI response...")
         try:
-            circuit_dict = parse_ai_response(response, mapper)
+            circuit_dict = parse_ai_response(response, mapper, image_name=input_path.stem)
             print("Successfully parsed and processed circuit data.")
         except ValueError as e:
             print(f"Warning: Failed to parse AI response: {e}")

@@ -84,29 +84,46 @@ class GridMapper:
         
         return row_index, col_index
     
-    def get_center_of_cell(self, grid_ref: str) -> tuple[int, int]:
+    def get_center_of_cell(self, grid_str):
         """
-        Get the pixel coordinates of the center of a grid cell.
-        
-        Args:
-            grid_ref: Grid reference string (e.g., 'A1', 'C5', 'J10')
-        
-        Returns:
-            Tuple of (x, y) pixel coordinates
-        
-        Raises:
-            ValueError: If grid reference is invalid
+        Parses 'A1' or 'A1_NE' into (x, y) pixels.
         """
-        row_index, col_index = self._parse_grid_ref(grid_ref)
+        # 1. Split base cell and suffix (e.g., "A1_NE" -> "A1", "NE")
+        parts = grid_str.strip().split('_')
+        base_cell = parts[0]
+        suffix = parts[1] if len(parts) > 1 else "C" # Default to Center
         
-        # Calculate center coordinates
-        # Column center: margin_left + (col_index + 0.5) * x_spacing
-        x = int(self.margin_left + (col_index + 0.5) * self.x_spacing)
+        # 2. Get the base center of the cell (Your existing logic)
+        # (Assuming you have logic that turns 'A'->row_index, '1'->col_index)
+        row_idx = ord(base_cell[0].upper()) - ord('A')
+        col_idx = int(base_cell[1:]) - 1
         
-        # Row center: margin_top + (row_index + 0.5) * y_spacing
-        y = int(self.margin_top + (row_index + 0.5) * self.y_spacing)
+        cell_width = self.image_width / self.cols
+        cell_height = self.image_height / self.rows
         
-        return (x, y)
+        center_x = (col_idx * cell_width) + (cell_width / 2)
+        center_y = (row_idx * cell_height) + (cell_height / 2)
+        
+        # 3. Apply The Nudge (Sub-grid offset)
+        # We move 25% of the cell size in the requested direction
+        offset_x = cell_width * 0.25
+        offset_y = cell_height * 0.25
+        
+        nudge_map = {
+            'C':  (0, 0),
+            'N':  (0, -offset_y), # Remember: Y is usually 0 at the top in images!
+            'S':  (0, offset_y),
+            'E':  (offset_x, 0),
+            'W':  (-offset_x, 0),
+            'NE': (offset_x, -offset_y),
+            'NW': (-offset_x, -offset_y),
+            'SE': (offset_x, offset_y),
+            'SW': (-offset_x, offset_y)
+        }
+        
+        dx, dy = nudge_map.get(suffix, (0,0))
+        
+        return (int(center_x + dx), int(center_y + dy))
 
 
 if __name__ == "__main__":
