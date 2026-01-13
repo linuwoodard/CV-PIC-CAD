@@ -13,6 +13,7 @@ from pathlib import Path
 
 import cv2
 import yaml
+from PIL import Image, ImageTk
 
 # Import translator pipeline functions
 import sys
@@ -48,9 +49,11 @@ class OpticalCircuitDigitizerGUI:
     
     def _create_widgets(self):
         """Create all GUI widgets."""
-        # Top Section: Select Image button and filename label
+        # Top Section: Frame for top controls
+        top_frame = tk.Frame(self.root)
+        
         self.select_button = tk.Button(
-            self.root,
+            top_frame,
             text="Select Image",
             command=self._on_select_image,
             width=15,
@@ -58,25 +61,49 @@ class OpticalCircuitDigitizerGUI:
         )
         
         self.filename_label = tk.Label(
-            self.root,
+            top_frame,
             textvariable=self.selected_filename,
             anchor="w",
             padx=10,
             font=("Arial", 10)
         )
         
-        # Middle Section: ScrolledText for YAML
+        # Middle Section: PanedWindow for resizable split view
+        self.middle_container = tk.PanedWindow(self.root, orient=tk.HORIZONTAL, sashrelief=tk.RAISED, sashwidth=5)
+        
+        # Left side: ScrolledText for YAML
+        yaml_frame = tk.Frame(self.middle_container)
         self.yaml_text = ScrolledText(
-            self.root,
+            yaml_frame,
             wrap=tk.WORD,
-            width=80,
+            width=40,
             height=25,
             font=("Courier", 10)
         )
+        self.yaml_text.pack(fill=tk.BOTH, expand=True)
         
-        # Bottom Section: Action buttons
+        # Right side: Image display label
+        image_frame = tk.Frame(self.middle_container)
+        self.image_display_label = tk.Label(
+            image_frame,
+            text="No image selected",
+            width=50,
+            height=25,
+            bg="lightgray",
+            relief=tk.SUNKEN,
+            anchor="center"
+        )
+        self.image_display_label.pack(fill=tk.BOTH, expand=True)
+        
+        # Add frames to PanedWindow
+        self.middle_container.add(yaml_frame, minsize=200)
+        self.middle_container.add(image_frame, minsize=200)
+        
+        # Bottom Section: Frame for action buttons
+        bottom_frame = tk.Frame(self.root)
+        
         self.generate_button = tk.Button(
-            self.root,
+            bottom_frame,
             text="Generate CAD",
             command=self._on_generate_cad,
             width=15,
@@ -87,7 +114,7 @@ class OpticalCircuitDigitizerGUI:
         )
         
         self.cancel_button = tk.Button(
-            self.root,
+            bottom_frame,
             text="Cancel / Clear",
             command=self._on_cancel_clear,
             width=15,
@@ -107,28 +134,28 @@ class OpticalCircuitDigitizerGUI:
             pady=2,
             font=("Arial", 9)
         )
+        
+        # Store frames for layout
+        self.top_frame = top_frame
+        self.bottom_frame = bottom_frame
     
     def _layout_widgets(self):
-        """Layout all widgets using grid."""
+        """Layout all widgets using pack."""
         # Top Section
-        self.select_button.grid(row=0, column=0, padx=10, pady=10, sticky="w")
-        self.filename_label.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
+        self.top_frame.pack(fill=tk.X, padx=10, pady=10)
+        self.select_button.pack(side=tk.LEFT, padx=(0, 10))
+        self.filename_label.pack(side=tk.LEFT, fill=tk.X, expand=True)
         
-        # Configure grid column weights for resizing
-        self.root.columnconfigure(1, weight=1)
-        
-        # Middle Section: YAML text area
-        self.yaml_text.grid(row=1, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
-        
-        # Configure row weight for text area to expand
-        self.root.rowconfigure(1, weight=1)
+        # Middle Section: Split view container (PanedWindow)
+        self.middle_container.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
         # Bottom Section: Buttons
-        self.generate_button.grid(row=2, column=0, padx=10, pady=10, sticky="w")
-        self.cancel_button.grid(row=2, column=1, padx=10, pady=10, sticky="e")
+        self.bottom_frame.pack(fill=tk.X, padx=10, pady=10)
+        self.generate_button.pack(side=tk.LEFT)
+        self.cancel_button.pack(side=tk.RIGHT)
         
-        # Status Bar
-        self.status_label.grid(row=3, column=0, columnspan=2, sticky="ew", padx=0, pady=0)
+        # Status Bar (pack last so it stays at bottom)
+        self.status_label.pack(fill=tk.X, side=tk.BOTTOM)
     
     def _on_select_image(self):
         """Handle Select Image button click - triggers upload_action."""
@@ -158,21 +185,54 @@ class OpticalCircuitDigitizerGUI:
         filename = os.path.basename(file_path)
         self.selected_filename.set(filename)
         
+        # A. Generate Grid Image immediately
+        try:
+            # Create output directory for grid overlay
+            output_dir = Path(__file__).parent / "vision" / "debug_output"
+            output_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Create grid overlay
+            input_path = Path(file_path)
+            temp_grid_image_path = output_dir / f"{input_path.stem}_grid_overlay_temp.jpg"
+            overlay_grid_on_image(str(file_path), str(temp_grid_image_path))
+            
+            # B. Open & Resize with PIL
+            pil_image = Image.open(temp_grid_image_path)
+            # Use LANCZOS resampling (works with both old and new PIL versions)
+            try:
+                pil_image.thumbnail((400, 400), Image.Resampling.LANCZOS)
+            except AttributeError:
+                # Fallback for older PIL versions
+                pil_image.thumbnail((400, 400), Image.LANCZOS)
+            
+            # C. Convert to Tkinter Object
+            tk_image = ImageTk.PhotoImage(pil_image)
+            
+            # D. Display the image
+            self.image_display_label.config(image=tk_image, text="")
+            
+            # IMPORTANT GC FIX: Keep reference to prevent garbage collection
+            self.image_display_label.image = tk_image
+            
+        except Exception as e:
+            self.update_status(f"Error creating grid overlay: {str(e)}")
+            return
+        
         # Update status
         self.update_status("Analyzing Image... (This may take a few seconds)")
         
         # Disable button during processing
         self.select_button.config(state="disabled")
         
-        # Run analysis in a separate thread
+        # E. Start Thread for vision API calls
         thread = threading.Thread(
             target=self._analyze_image_thread,
-            args=(file_path,),
+            args=(file_path, str(temp_grid_image_path)),
             daemon=True
         )
         thread.start()
     
-    def _analyze_image_thread(self, image_path: str):
+    def _analyze_image_thread(self, image_path: str, grid_image_path: str):
         """Background thread to analyze image and get YAML."""
         try:
             # Load image to get dimensions
@@ -185,14 +245,8 @@ class OpticalCircuitDigitizerGUI:
             # Create GridMapper
             mapper = GridMapper(image_width=width, image_height=height, rows=10, cols=10)
             
-            # Create output directory for grid overlay
-            output_dir = Path(__file__).parent / "vision" / "debug_output"
-            output_dir.mkdir(parents=True, exist_ok=True)
-            
-            # Create grid overlay
-            input_path = Path(image_path)
-            output_image_path = output_dir / f"{input_path.stem}_grid_overlay.jpg"
-            overlay_grid_on_image(str(image_path), str(output_image_path))
+            # Grid overlay already created in upload_action, use the provided path
+            output_image_path = Path(grid_image_path)
             
             # Construct enhanced prompt with examples
             enhanced_prompt = construct_prompt_with_examples(GRID_SYSTEM_PROMPT_V3)
@@ -201,6 +255,7 @@ class OpticalCircuitDigitizerGUI:
             response = send_to_vision_model(str(output_image_path), system_prompt=enhanced_prompt)
             
             # Parse and convert grid references
+            input_path = Path(image_path)
             circuit_dict = parse_ai_response(
                 response,
                 mapper,
@@ -262,6 +317,10 @@ class OpticalCircuitDigitizerGUI:
         """Clear the text box and reset status."""
         # Clear text box
         self.yaml_text.delete("1.0", tk.END)
+        
+        # Clear image display
+        self.image_display_label.config(image="", text="No image selected")
+        self.image_display_label.image = None  # Clear reference
         
         # Reset status
         self.update_status("Ready")
