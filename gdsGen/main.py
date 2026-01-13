@@ -38,7 +38,7 @@ if __name__ == "__main__":
     
     # Assuming 'template.yaml' is in the SAME folder as main.py
     # If it is in a parent folder, change to: script_dir.parent / "template.yaml"
-    template_path = script_dir / "template.yaml"
+    template_path = script_dir / "output/circuit.yaml"
     
     # Build the circuit
     try:

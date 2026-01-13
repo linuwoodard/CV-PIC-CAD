@@ -114,5 +114,61 @@ routes:
     links:
       mzi_loop,o1: terminator_2,o1
 """
-    }
+    },
+    {
+        "name": "Simple MZI with Edge Couplers",
+        "description": "A simple MZI with edge couplers on all four ports.",
+        "yaml": """
+  instances:
+    mzi_heater_1:
+      component: mzi_heater
+      settings: {}
+    tapered_input_coupler_1:
+      component: tapered_input_coupler
+      settings: {}
+    tapered_input_coupler_2:
+      component: tapered_input_coupler
+      settings: {}
+    tapered_input_coupler_3:
+      component: tapered_input_coupler
+      settings: {}
+    tapered_input_coupler_4:
+      component: tapered_input_coupler
+      settings: {}
+  placements:
+    mzi_heater_1:
+      x: 750
+      y: 1186
+      rotation: 270
+    tapered_input_coupler_1:
+      x: 542
+      y: 323
+      rotation: 0
+    tapered_input_coupler_2:
+      x: 1125
+      y: 323
+      rotation: 180
+    tapered_input_coupler_3:
+      x: 542
+      y: 1833
+      rotation: 0
+    tapered_input_coupler_4:
+      x: 1125
+      y: 1833
+      rotation: 180
+  routes:
+    route_top_left_input:
+      links:
+        tapered_input_coupler_1,o1: mzi_heater_1,o1
+    route_top_right_input:
+      links:
+        tapered_input_coupler_2,o1: mzi_heater_1,o2
+    route_bottom_left_output:
+      links:
+        tapered_input_coupler_3,o1: mzi_heater_1,o3
+    route_bottom_right_output:
+      links:
+        tapered_input_coupler_4,o1: mzi_heater_1,o4
+  """
+    },
 ]

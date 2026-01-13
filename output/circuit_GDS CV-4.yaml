@@ -48,4 +48,3 @@ routes:
   route_bottom_right_output:
     links:
       tapered_input_coupler_4,o1: mzi_heater_1,o4
-
