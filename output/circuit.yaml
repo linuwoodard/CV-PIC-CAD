@@ -1,27 +1,43 @@
 instances:
-  grating_coupler_1:
+  gc_top:
     component: grating_coupler
     settings: {}
-  grating_coupler_2:
+  ring_1:
+    component: ring_resonator
+    settings: {}
+  gc_bottom:
     component: grating_coupler
     settings: {}
-  mzi_heater_1:
-    component: mzi_heater
-    settings: {}
+  term_add:
+    component: terminator
+  term_drop:
+    component: terminator
 placements:
-  grating_coupler_1:
-    x: 1375
+  gc_top:
+    x: 1668
     y: 1043
-  grating_coupler_2:
-    x: 1960
-    y: 1043
-  mzi_heater_1:
+  ring_1:
     x: 1668
     y: 2222
+  gc_bottom:
+    x: 1668
+    y: 3402
+  term_add:
+    x: 1960
+    y: 2615
+  term_drop:
+    x: 1960
+    y: 3009
 routes:
   route_1:
     links:
-      grating_coupler_1,o1: mzi_heater_1,o1
+      gc_top,o1: ring_1,o2
   route_2:
     links:
-      grating_coupler_2,o1: mzi_heater_1,o2
+      ring_1,o1: gc_bottom,o1
+  route_3:
+    links:
+      ring_1,o4: term_add,o1
+  route_4:
+    links:
+      ring_1,o3: term_drop,o1

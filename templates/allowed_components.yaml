@@ -1,0 +1,30 @@
+# circuit_template.yaml
+name: my_optical_circuit
+# 1. INSTANCES: The "Ingredients" list.
+# The AI must identify which components exist and give them unique names.
+allowed_components:
+    tapered_input_coupler:
+      ports: 1
+    mzi_heater:
+      ports: 4
+    mzi_no_heater:
+      ports: 4
+    straight_heater:
+      ports: 1
+    racetrack_resonator:
+      ports: 4
+    directional_coupler:
+      ports: 4
+    poling_electrode:
+      ports: 1
+    grating_coupler:
+      ports: 1
+    terminator:
+      ports: 1
+    ring_resonator:
+      ports: 4
+    
+
+
+
+

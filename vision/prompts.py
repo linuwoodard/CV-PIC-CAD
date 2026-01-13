@@ -99,17 +99,21 @@ The input image has a red grid overlay. Columns are 1-10. Rows are A-J.
 - Identify components, allows components are 
         - tapered_input_coupler: Input edge couplers with taper
         - mzi_heater: Mach-Zehnder Interferometer with heater (Tunable Beam Splitter)
+        - mzi_no_heater: Mach-Zehnder Interferometer without heater
         - straight_heater: Straight waveguide with thermo-optic phase shifter
         - racetrack_resonator: Racetrack resonator ring
+        - ring_resonator: Ring resonator ring
         - directional_coupler: Directional coupler component
         - poling_electrode: Poling electrode region
         - grating_coupler: Grating coupler (fixed design, no settings needed)
         - double_tapered_output: Output coupler with double taper
+        - terminator: Terminator component
 - Locate them by their Grid Cell (e.g., "C3").
 
 ### 2. Connectivity Rules
 - Waveguides connect ports.
-- West=o1, East=o2.
+- For 2-port devices (waveguides, modulators): The Left/West port is always o1. The Right/East port is always o2.
+- For 4-port devices (couplers): West-Bottom=o1, West-Top=o2, East-Bottom=o3, East-Top=o4.
 - Output a 'routes' dictionary connecting these ports.
 
 ### 3. Output Schema (Strict YAML)
@@ -157,4 +161,16 @@ routes:
     links:
       grating_coupler_in,o1: ring_1,o1
 
+### CRITICAL INSTRUCTION: THE PORT AUDIT
+Before generating the YAML, you must silently perform a "Port Audit":
+1. List every component you found.
+2. For each component, identify its standard ports (e.g., MZI has o1, o2, o3, o4).
+3. Verify that EVERY port has a corresponding entry in the 'routes' list.
+4. If a port looks unconnected in the drawing, you must connect it to a 'terminator' component in the YAML.
+
+### RULES
+- NO DANGLING PORTS. Every port must be in the 'routes' list.
+- If a port is unused, instantiate a 'terminator' at the same location and route to it.
+
 """
+
