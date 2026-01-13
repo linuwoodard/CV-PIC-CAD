@@ -239,3 +239,143 @@ def tunable_beam_splitter(
     c.add_port("o4", port=out_top.ports["o2"])  # Output Top
     
     return c
+
+@gf.cell
+def euler_bend(
+    radius: float = 210.0,
+    angle: float = 20.0,
+    p: float = 0.5,
+    width: float = 1.2,
+    **kwargs
+) -> gf.Component:
+    """
+    A standalone Euler bend with strict geometric control.
+    Uses gf.path to ensure exact p-factor and radius compliance, 
+    bypassing potential bounding-box issues in standard components.
+    
+    Args:
+        radius: Effective radius of the bend (um)
+        angle: Total turn angle (degrees)
+        p: Euler spiral parameter (0 = circular, 0.5 = euler, 1.0 = heavy smoothing)
+        width: Waveguide width (um)
+    """
+    c = gf.Component()
+    
+    # 1. Define the exact geometric path
+    # use_eff=False ensures 'radius' is treated as the minimum bend radius R_min
+    path = gf.path.euler(radius=radius, angle=angle, p=p, use_eff=False)
+    
+    # 2. Define Cross Section
+    xs = gf.cross_section.strip(width=width)
+    
+    # 3. Extrude
+    ref = c << path.extrude(xs)
+    
+    # 4. Port Management
+    # Path extrusion usually names ports '1' and '2'. We map them to standard 'o1'/'o2'.
+    # We check keys safely to handle different GDSFactory versions.
+    
+    p1_name = "1" if "1" in ref.ports else "o1"
+    p2_name = "2" if "2" in ref.ports else "o2"
+    
+    c.add_port("o1", port=ref.ports[p1_name])
+    c.add_port("o2", port=ref.ports[p2_name])
+    
+    # copy info helps with layer propagation
+    c.info['radius'] = radius
+    c.info['angle'] = angle
+    
+    return c
+
+@gf.cell
+def racetrack_resonator(
+    straightLength: float = 12000.0,
+    rtBendRadius: float = 210.0,
+    rtEulerP: float = 0.5,
+    couplingGap: float = 1.0,
+    couplingLength: float = 600.0,
+    bendAngle: float = 20.0,
+    couplerEulerP: float = 0.5,
+    wgSpacing: float = 30.0,
+    wgWidth: float = 1.2,
+    **kwargs
+) -> gf.Component:
+    """
+    Racetrack Resonator with Euler bends.
+    """
+    c = gf.Component()
+    xs = gf.cross_section.strip(width=wgWidth)
+
+    # --- 1. The Racetrack Loop ---
+    
+    # Straights (Top and Bot)
+    # We use standard components to guarantee 1:1 scaling (12000um = 12000um)
+    rt_straight = gf.components.straight(length=straightLength, cross_section=xs)
+    
+    # Bends (180 deg)
+    # We use path.euler to ensure it doesn't explode
+    p_180 = gf.path.euler(radius=rtBendRadius, angle=180, p=rtEulerP, use_eff=False)
+    bend180 = p_180.extrude(xs)
+    
+    # Place Loop
+    # Top Straight
+    rt_top = c << rt_straight
+    rt_top.x = 0; rt_top.y = 0
+    
+    # Right Bend (Clockwise/Down)
+    bend_r = c << bend180
+    bend_r.mirror_y() # Standard goes Up, we need Down
+    bend_r.connect("o1", rt_top.ports["o2"])
+    
+    # Bot Straight
+    rt_bot = c << rt_straight
+    rt_bot.connect("o1", bend_r.ports["o2"])
+    
+    # Left Bend (Clockwise/Up)
+    bend_l = c << bend180
+    bend_l.mirror_y()
+    bend_l.connect("o1", rt_bot.ports["o2"])
+    
+    # --- 2. Bus Couplers ---
+    
+    # Helper for Bus S-Bends (reusing your safe logic)
+    delta_y = wgSpacing
+    # NOTE: Ensure _create_precise_euler_sbend is available in your PDK
+    sbend = _create_precise_euler_sbend(xs, rtBendRadius, bendAngle, couplerEulerP, delta_y)
+    
+    c_straight = gf.components.straight(length=couplingLength, cross_section=xs)
+    pitch = wgWidth + couplingGap
+    
+    # -- Top Bus --
+    top_c = c << c_straight
+    top_c.xmax = rt_top.xmax
+    top_c.ymin = rt_top.ymax + couplingGap
+    
+    # Fan-In/Out
+    t_in = c << sbend
+    t_in.mirror_y()
+    t_in.connect("o2", top_c.ports["o1"])
+    
+    t_out = c << sbend
+    t_out.connect("o1", top_c.ports["o2"])
+    
+    # -- Bot Bus --
+    bot_c = c << c_straight
+    bot_c.xmax = rt_bot.xmax # Right aligned
+    bot_c.ymax = rt_bot.ymin - couplingGap
+    
+    # Fan-In/Out
+    b_in = c << sbend
+    b_in.connect("o2", bot_c.ports["o1"])
+    
+    b_out = c << sbend
+    b_out.mirror_y()
+    b_out.connect("o1", bot_c.ports["o2"])
+    
+    # Ports
+    c.add_port("o1", port=t_in.ports["o1"])
+    c.add_port("o2", port=t_out.ports["o2"])
+    c.add_port("o3", port=b_in.ports["o1"])
+    c.add_port("o4", port=b_out.ports["o2"])
+    
+    return c
