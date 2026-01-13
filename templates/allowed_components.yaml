@@ -25,8 +25,7 @@ allowed_components:
       ports: 4
     euler_bend:
       ports: 2
+    loop_mirror:
+      ports: 2
     
-
-
-
 

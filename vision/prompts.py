@@ -195,11 +195,15 @@ COMPONENT_DEFINITIONS:
   tapered_input_coupler: [o1]
   grating_coupler: [o1]
   terminator: [o1]
-  euler_bend: [o1, o2]
 
   # 1-Port Electrical/Thermal
   straight_heater: [e1]
   poling_electrode: [e1]
+
+
+  # 2-Port Components (Bends)
+  euler_bend: [o1, o2]
+  loop_mirror: [o1, o2]
 
   # 4-Port Components (Complex Devices)
   # Port mapping: o1=West-Bottom, o2=West-Top, o3=East-Bottom, o4=East-Top
@@ -252,4 +256,6 @@ placements:
 routes:
   <route_name_1>:
     links:
-      <inst1>,<port>: <inst2>,<port>"""
+      <inst1>,<port>: <inst2>,<port>
+      
+"""

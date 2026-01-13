@@ -17,6 +17,33 @@ api_key = os.getenv("GEMINI_API_KEY")
 from overlay_grid import overlay_grid_on_image
 from grid_tools import GridMapper
 from prompts import GRID_SYSTEM_PROMPT_V3
+from reference_library import EXAMPLES
+
+
+def construct_prompt_with_examples(base_prompt: str) -> str:
+    """
+    Construct a system prompt by appending few-shot examples from the reference library.
+    
+    Args:
+        base_prompt: The base system prompt to enhance with examples
+    
+    Returns:
+        Enhanced prompt string with examples appended
+    """
+    prompt = base_prompt
+    
+    # Append examples section
+    prompt += "\n\n### FEW-SHOT REFERENCE EXAMPLES\n"
+    prompt += "Study these examples carefully. They demonstrate the correct format and handling of common patterns:\n\n"
+    
+    for i, example in enumerate(EXAMPLES, start=1):
+        prompt += f"--- Example {i}: {example['name']} ---\n"
+        prompt += f"Description: {example['description']}\n\n"
+        prompt += "Expected YAML output:\n"
+        prompt += example['yaml']
+        prompt += "\n\n"
+    
+    return prompt
 
 
 def send_to_vision_model(image_path: str, system_prompt: str = GRID_SYSTEM_PROMPT_V3):
@@ -231,7 +258,9 @@ def main(input_image_path: str = None, output_dir: Path = None):
     # Send to vision model
     print("Sending to vision model...")
     try:
-        response = send_to_vision_model(str(output_image_path))
+        # Construct enhanced prompt with few-shot examples
+        enhanced_prompt = construct_prompt_with_examples(GRID_SYSTEM_PROMPT_V3)
+        response = send_to_vision_model(str(output_image_path), system_prompt=enhanced_prompt)
         print("\nVision model response:")
         print("-" * 50)
         print(response)

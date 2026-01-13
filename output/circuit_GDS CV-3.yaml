@@ -8,176 +8,116 @@ instances:
   directional_coupler_1:
     component: directional_coupler
     settings: {}
-  directional_coupler_2:
-    component: directional_coupler
+  loop_mirror_1:
+    component: loop_mirror
     settings: {}
-  tapered_input_coupler_1:
-    component: tapered_input_coupler
-    settings: {}
-  terminator_1:
-    component: terminator
-    settings: {}
-  euler_bend_L_1:
+  euler_bend_input_1a:
     component: euler_bend
     settings: {}
-  euler_bend_L_2:
+  euler_bend_input_1b:
     component: euler_bend
     settings: {}
-  euler_bend_L_3:
+  euler_bend_input_2a:
     component: euler_bend
     settings: {}
-  euler_bend_L_4:
+  euler_bend_input_2b:
     component: euler_bend
     settings: {}
-  euler_bend_L_5:
+  euler_bend_loop_1a:
     component: euler_bend
     settings: {}
-  euler_bend_L_6:
+  euler_bend_loop_1b:
     component: euler_bend
     settings: {}
-  euler_bend_R_1:
+  euler_bend_loop_2a:
     component: euler_bend
     settings: {}
-  euler_bend_R_2:
-    component: euler_bend
-    settings: {}
-  euler_bend_R_3:
-    component: euler_bend
-    settings: {}
-  euler_bend_R_4:
-    component: euler_bend
-    settings: {}
-  euler_bend_R_5:
-    component: euler_bend
-    settings: {}
-  euler_bend_R_6:
+  euler_bend_loop_2b:
     component: euler_bend
     settings: {}
 placements:
   grating_coupler_1:
     x: 917
-    y: 377
+    y: 323
     rotation: 270
   grating_coupler_2:
-    x: 1084
-    y: 377
+    x: 1251
+    y: 323
     rotation: 270
   directional_coupler_1:
     x: 1084
-    y: 754
-    rotation: 270
-  directional_coupler_2:
+    y: 970
+    rotation: 0
+  loop_mirror_1:
     x: 1084
-    y: 1617
-    rotation: 270
-  tapered_input_coupler_1:
-    x: 1084
-    y: 2049
+    y: 1833
+    rotation: 0
+  euler_bend_input_1a:
+    x: 875
+    y: 485
     rotation: 90
-  terminator_1:
+  euler_bend_input_1b:
+    x: 875
+    y: 701
+    rotation: 0
+  euler_bend_input_2a:
     x: 1292
-    y: 2049
+    y: 485
+    rotation: 270
+  euler_bend_input_2b:
+    x: 1292
+    y: 701
     rotation: 180
-  euler_bend_L_1:
-    x: 917
-    y: 754
+  euler_bend_loop_1a:
+    x: 875
+    y: 1455
+    rotation: 90
+  euler_bend_loop_1b:
+    x: 875
+    y: 1563
     rotation: 0
-  euler_bend_L_2:
-    x: 917
-    y: 970
-    rotation: 0
-  euler_bend_L_3:
-    x: 917
-    y: 1186
-    rotation: 0
-  euler_bend_L_4:
-    x: 917
-    y: 1402
-    rotation: 0
-  euler_bend_L_5:
-    x: 917
-    y: 1617
-    rotation: 0
-  euler_bend_L_6:
-    x: 917
-    y: 1833
-    rotation: 0
-  euler_bend_R_1:
-    x: 1251
-    y: 754
-    rotation: 0
-  euler_bend_R_2:
-    x: 1251
-    y: 970
-    rotation: 0
-  euler_bend_R_3:
-    x: 1251
-    y: 1186
-    rotation: 0
-  euler_bend_R_4:
-    x: 1251
-    y: 1402
-    rotation: 0
-  euler_bend_R_5:
-    x: 1251
-    y: 1617
-    rotation: 0
-  euler_bend_R_6:
-    x: 1251
-    y: 1833
-    rotation: 0
+  euler_bend_loop_2a:
+    x: 1292
+    y: 1455
+    rotation: 270
+  euler_bend_loop_2b:
+    x: 1292
+    y: 1563
+    rotation: 180
 routes:
-  route_gc1_dc1:
+  route_gc1_to_eb1a:
     links:
-      grating_coupler_1,o1: directional_coupler_1,o1
-  route_gc2_dc1:
+      grating_coupler_1,o1: euler_bend_input_1a,o1
+  route_eb1a_to_eb1b:
     links:
-      grating_coupler_2,o1: directional_coupler_1,o2
-  route_dc1_ebL1:
+      euler_bend_input_1a,o2: euler_bend_input_1b,o1
+  route_eb1b_to_dc1_o2:
     links:
-      directional_coupler_1,o3: euler_bend_L_1,o1
-  route_ebL1_ebL2:
+      euler_bend_input_1b,o2: directional_coupler_1,o2
+  route_gc2_to_eb2a:
     links:
-      euler_bend_L_1,o2: euler_bend_L_2,o1
-  route_ebL2_ebL3:
+      grating_coupler_2,o1: euler_bend_input_2a,o1
+  route_eb2a_to_eb2b:
     links:
-      euler_bend_L_2,o2: euler_bend_L_3,o1
-  route_ebL3_ebL4:
+      euler_bend_input_2a,o2: euler_bend_input_2b,o1
+  route_eb2b_to_dc1_o4:
     links:
-      euler_bend_L_3,o2: euler_bend_L_4,o1
-  route_ebL4_ebL5:
+      euler_bend_input_2b,o2: directional_coupler_1,o4
+  route_dc1_o1_to_eb_l1a:
     links:
-      euler_bend_L_4,o2: euler_bend_L_5,o1
-  route_ebL5_ebL6:
+      directional_coupler_1,o1: euler_bend_loop_1a,o1
+  route_eb_l1a_to_eb_l1b:
     links:
-      euler_bend_L_5,o2: euler_bend_L_6,o1
-  route_ebL6_dc2:
+      euler_bend_loop_1a,o2: euler_bend_loop_1b,o1
+  route_eb_l1b_to_lm1_o1:
     links:
-      euler_bend_L_6,o2: directional_coupler_2,o1
-  route_dc1_ebR1:
+      euler_bend_loop_1b,o2: loop_mirror_1,o1
+  route_dc1_o3_to_eb_l2a:
     links:
-      directional_coupler_1,o4: euler_bend_R_1,o1
-  route_ebR1_ebR2:
+      directional_coupler_1,o3: euler_bend_loop_2a,o1
+  route_eb_l2a_to_eb_l2b:
     links:
-      euler_bend_R_1,o2: euler_bend_R_2,o1
-  route_ebR2_ebR3:
+      euler_bend_loop_2a,o2: euler_bend_loop_2b,o1
+  route_eb_l2b_to_lm1_o2:
     links:
-      euler_bend_R_2,o2: euler_bend_R_3,o1
-  route_ebR3_ebR4:
-    links:
-      euler_bend_R_3,o2: euler_bend_R_4,o1
-  route_ebR4_ebR5:
-    links:
-      euler_bend_R_4,o2: euler_bend_R_5,o1
-  route_ebR5_ebR6:
-    links:
-      euler_bend_R_5,o2: euler_bend_R_6,o1
-  route_ebR6_dc2:
-    links:
-      euler_bend_R_6,o2: directional_coupler_2,o2
-  route_dc2_output:
-    links:
-      directional_coupler_2,o3: tapered_input_coupler_1,o1
-  route_dc2_terminator:
-    links:
-      directional_coupler_2,o4: terminator_1,o1
+      euler_bend_loop_2b,o2: loop_mirror_1,o2
