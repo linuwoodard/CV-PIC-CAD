@@ -15,3 +15,4 @@ pyyaml                # To parse the output from the AI
 
 # Utilities
 ipykernel             # Allows you to run code cells inside Cursor/VS Code
+python-dotenv         # For loading environment variables from .env file
