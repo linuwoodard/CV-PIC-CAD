@@ -294,7 +294,7 @@ class OpticalCircuitDigitizerGUI:
             self.yaml_text.insert("1.0", yaml_string)
     
     def submit_action(self):
-        """Get YAML text and save to output/circuit.yaml."""
+        """Get YAML text and save to output/circuit_<image_name>.yaml."""
         # Get text from ScrolledText widget
         yaml_content = self.yaml_text.get("1.0", tk.END)
         
@@ -302,8 +302,16 @@ class OpticalCircuitDigitizerGUI:
         output_dir = Path(__file__).parent / "output"
         output_dir.mkdir(parents=True, exist_ok=True)
         
-        # Save to output/circuit.yaml
-        output_file = output_dir / "circuit.yaml"
+        # Determine filename based on current image
+        if self.current_file:
+            image_path = Path(self.current_file)
+            image_name = image_path.stem  # Get filename without extension
+            filename = f"circuit_{image_name}.yaml"
+        else:
+            filename = "circuit.yaml"  # Fallback if no image selected
+        
+        # Save to output/circuit_<image_name>.yaml
+        output_file = output_dir / filename
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(yaml_content)
         
