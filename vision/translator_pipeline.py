@@ -113,7 +113,7 @@ def send_to_vision_model(image_path: str, system_prompt: str = GRID_SYSTEM_PROMP
         raise ConnectionError(f"API connection error: {str(e)}")
 
 
-def parse_ai_response(response_text: str, mapper: GridMapper, output_path: Path = None, image_name: str = None):
+def parse_ai_response(response_text: str, mapper: GridMapper, output_path: Path = None, image_name: str = None, save_file: bool = True):
     """
     Post-process AI response: strip markdown, parse YAML, convert grid references to integers.
     
@@ -122,6 +122,7 @@ def parse_ai_response(response_text: str, mapper: GridMapper, output_path: Path 
         mapper: GridMapper instance for converting grid references to pixel coordinates
         output_path: Path to save the final YAML file (default: output/circuit_<image_name>.yaml)
         image_name: Name of the input image (without extension) to include in filename
+        save_file: Whether to save the YAML file to disk (default: True)
     
     Returns:
         Dictionary containing the parsed and processed circuit data
@@ -185,22 +186,25 @@ def parse_ai_response(response_text: str, mapper: GridMapper, output_path: Path 
                     # If conversion fails, keep the original value
                     print(f"Warning: Could not convert y='{y_value}' for instance '{instance_name}', keeping original value")
     
-    # Set default output path if not provided
-    if output_path is None:
-        if image_name:
-            filename = f"circuit_{image_name}.yaml"
-        else:
-            filename = "circuit.yaml"
-        output_path = Path(__file__).parent.parent / "output" / filename
+    # Save file only if save_file is True
+    if save_file:
+        # Set default output path if not provided
+        if output_path is None:
+            if image_name:
+                filename = f"circuit_{image_name}.yaml"
+            else:
+                filename = "circuit.yaml"
+            output_path = Path(__file__).parent.parent / "output" / filename
+        
+        # Create output directory if it doesn't exist
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Save the final dictionary to output/circuit.yaml
+        with open(output_path, 'w', encoding='utf-8') as f:
+            yaml.dump(circuit_dict, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
+        
+        print(f"Processed circuit data saved to: {output_path}")
     
-    # Create output directory if it doesn't exist
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    
-    # Save the final dictionary to output/circuit.yaml
-    with open(output_path, 'w', encoding='utf-8') as f:
-        yaml.dump(circuit_dict, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
-    
-    print(f"Processed circuit data saved to: {output_path}")
     return circuit_dict
 
 

@@ -27,6 +27,10 @@ from prompts import GRID_SYSTEM_PROMPT_V3
 from overlay_grid import overlay_grid_on_image
 from grid_tools import GridMapper
 
+# Import GDS generation function
+sys.path.insert(0, str(Path(__file__).parent / "gdsGen"))
+from buildCircuit import build_gds
+
 
 
 class OpticalCircuitDigitizerGUI:
@@ -255,12 +259,13 @@ class OpticalCircuitDigitizerGUI:
             # Send to vision model
             response = send_to_vision_model(str(output_image_path), system_prompt=enhanced_prompt)
             
-            # Parse and convert grid references
+            # Parse and convert grid references (but don't save file yet)
             input_path = Path(image_path)
             circuit_dict = parse_ai_response(
                 response,
                 mapper,
-                image_name=input_path.stem
+                image_name=input_path.stem,
+                save_file=False  # Don't save during analysis, only save when Generate CAD is pressed
             )
             
             # Convert dictionary to YAML string
@@ -295,7 +300,7 @@ class OpticalCircuitDigitizerGUI:
             self.yaml_text.insert("1.0", yaml_string)
     
     def submit_action(self):
-        """Get YAML text and save to output/circuit_<image_name>.yaml."""
+        """Get YAML text, save to output/circuit_<image_name>.yaml, then generate GDS."""
         # Get text from ScrolledText widget
         yaml_content = self.yaml_text.get("1.0", tk.END)
         
@@ -317,10 +322,58 @@ class OpticalCircuitDigitizerGUI:
             f.write(yaml_content)
         
         # Update status
-        self.update_status(f"Success: YAML saved to {output_file}")
+        self.update_status(f"YAML saved. Generating GDS file...")
         
         # Print confirmation
         print(f"YAML saved successfully to: {output_file}")
+        
+        # Disable button during GDS generation
+        self.generate_button.config(state="disabled")
+        
+        # Generate GDS file in a separate thread to avoid blocking UI
+        thread = threading.Thread(
+            target=self._generate_gds_thread,
+            args=(output_file,),
+            daemon=True
+        )
+        thread.start()
+    
+    def _generate_gds_thread(self, yaml_file: Path):
+        """Background thread to generate GDS file from saved YAML."""
+        try:
+            # Calculate relative path from project root to the YAML file
+            project_root = Path(__file__).parent
+            relative_path = yaml_file.relative_to(project_root)
+            
+            # Call the GDS generation function with the relative path
+            result = build_gds(str(relative_path))
+            
+            if result is not None:
+                # Update UI on main thread with success
+                gds_file = yaml_file.with_suffix(".gds")
+                self.root.after(0, self._on_gds_generation_complete, True, None, gds_file)
+            else:
+                # Update UI on main thread with error
+                self.root.after(0, self._on_gds_generation_complete, False, "GDS generation returned None", None)
+                
+        except Exception as e:
+            error_msg = f"Error generating GDS: {str(e)}"
+            print(error_msg)
+            # Update UI on main thread with error
+            self.root.after(0, self._on_gds_generation_complete, False, error_msg, None)
+    
+    def _on_gds_generation_complete(self, success: bool, error_msg: str = None, gds_file: Path = None):
+        """Handle GDS generation completion (called from main thread via root.after)."""
+        # Re-enable button
+        self.generate_button.config(state="normal")
+        
+        if success:
+            if gds_file:
+                self.update_status(f"Success: GDS file generated and saved to {gds_file}")
+            else:
+                self.update_status("Success: GDS file generated")
+        else:
+            self.update_status(f"Error: {error_msg}" if error_msg else "Error: GDS generation failed")
     
     def cancel_action(self):
         """Clear the text box and reset status."""
