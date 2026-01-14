@@ -1,6 +1,6 @@
 instances:
-  mzi_1:
-    component: mzi_no_heater
+  mzi_heater_1:
+    component: mzi_heater
     settings: {}
   tapered_input_coupler_1:
     component: tapered_input_coupler
@@ -15,37 +15,37 @@ instances:
     component: tapered_input_coupler
     settings: {}
 placements:
-  mzi_1:
-    x: 792
-    y: 1186
+  mzi_heater_1:
+    x: 750
+    y: 970
     rotation: 90
   tapered_input_coupler_1:
-    x: 583
+    x: 542
     y: 323
-    rotation: 90
+    rotation: 0
   tapered_input_coupler_2:
-    x: 1084
+    x: 1125
     y: 323
-    rotation: 90
+    rotation: 180
   tapered_input_coupler_3:
-    x: 583
+    x: 542
     y: 1833
-    rotation: 270
+    rotation: 0
   tapered_input_coupler_4:
-    x: 1084
+    x: 1125
     y: 1833
-    rotation: 270
+    rotation: 180
 routes:
-  route_top_left_input:
+  route_top_left:
     links:
-      tapered_input_coupler_1,o1: mzi_1,o1
-  route_top_right_input:
+      tapered_input_coupler_1,o1: mzi_heater_1,o1
+  route_top_right:
     links:
-      tapered_input_coupler_2,o1: mzi_1,o2
-  route_bottom_left_output:
+      tapered_input_coupler_2,o1: mzi_heater_1,o2
+  route_bottom_left:
     links:
-      mzi_1,o3: tapered_input_coupler_3,o1
-  route_bottom_right_output:
+      tapered_input_coupler_3,o1: mzi_heater_1,o3
+  route_bottom_right:
     links:
-      mzi_1,o4: tapered_input_coupler_4,o1
+      tapered_input_coupler_4,o1: mzi_heater_1,o4
 

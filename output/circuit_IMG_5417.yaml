@@ -1,8 +1,8 @@
 instances:
-  tapered_input_coupler_1:
-    component: tapered_input_coupler
-    settings: {}
   grating_coupler_1:
+    component: grating_coupler
+    settings: {}
+  grating_coupler_2:
     component: grating_coupler
     settings: {}
   ring_resonator_1:
@@ -15,16 +15,16 @@ instances:
     component: terminator
     settings: {}
 placements:
-  tapered_input_coupler_1:
+  grating_coupler_1:
     x: 1663
     y: 1008
     rotation: 270
-  grating_coupler_1:
+  grating_coupler_2:
     x: 1663
     y: 3427
     rotation: 90
   ring_resonator_1:
-    x: 1890
+    x: 1663
     y: 2217
     rotation: 90
   terminator_1:
@@ -36,15 +36,15 @@ placements:
     y: 2318
     rotation: 0
 routes:
-  route_1:
+  route_bus_top:
     links:
-      tapered_input_coupler_1,o1: ring_resonator_1,o1
-  route_2:
+      grating_coupler_1,o1: ring_resonator_1,o2
+  route_bus_bottom:
     links:
-      ring_resonator_1,o3: grating_coupler_1,o1
-  route_3:
+      ring_resonator_1,o1: grating_coupler_2,o1
+  route_drop_top:
     links:
-      ring_resonator_1,o2: terminator_1,o1
-  route_4:
+      ring_resonator_1,o4: terminator_1,o1
+  route_drop_bottom:
     links:
-      ring_resonator_1,o4: terminator_2,o1
+      ring_resonator_1,o3: terminator_2,o1
