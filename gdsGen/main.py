@@ -32,17 +32,18 @@ def build_circuit(yaml_path: str | Path) -> gf.Component:
     
     return component
 
-if __name__ == "__main__":
-    # Define paths relative to this script
+def main(circuit_path: str | Path) -> gf.Component:
+    """Main function to build a circuit from a YAML template file."""
     script_dir = Path(__file__).parent
-    
-    # Assuming 'template.yaml' is in the SAME folder as main.py
-    # If it is in a parent folder, change to: script_dir.parent / "template.yaml"
-    template_path = script_dir / "output/circuit.yaml"
+    circuit_path = Path(circuit_path)
+    circuit_full_path = script_dir / circuit_path
+
+    if not circuit_full_path.exists():
+        raise FileNotFoundError(f"Circuit file not found: {circuit_full_path}")
     
     # Build the circuit
     try:
-        c = build_circuit(template_path)
+        c = build_circuit(circuit_full_path)
         
         # Display
         print("Displaying component...")
@@ -55,5 +56,12 @@ if __name__ == "__main__":
         c.write_gds(output_path)
         print(f"✅ Success! GDS saved to: {output_path}")
         
+        return c
+
     except Exception as e:
         print(f"❌ Error: {e}")
+        return None
+
+
+if __name__ == "__main__":
+    main("output/circuit.yaml")

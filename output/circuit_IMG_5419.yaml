@@ -1,0 +1,76 @@
+instances:
+  tapered_input_coupler_1:
+    component: tapered_input_coupler
+    settings: {}
+  tapered_input_coupler_2:
+    component: tapered_input_coupler
+    settings: {}
+  mzi_no_heater_1:
+    component: mzi_no_heater
+    settings: {}
+  mzi_no_heater_2:
+    component: mzi_no_heater
+    settings: {}
+  euler_bend_input_top:
+    component: euler_bend
+    settings: {}
+  euler_bend_input_bottom:
+    component: euler_bend
+    settings: {}
+  euler_bend_loopback:
+    component: euler_bend
+    settings: {}
+placements:
+  tapered_input_coupler_1:
+    x: 330
+    y: 420
+    rotation: 0
+  tapered_input_coupler_2:
+    x: 330
+    y: 925
+    rotation: 0
+  mzi_no_heater_1:
+    x: 925
+    y: 589
+    rotation: 0
+  mzi_no_heater_2:
+    x: 1454
+    y: 757
+    rotation: 0
+  euler_bend_input_top:
+    x: 661
+    y: 589
+    rotation: 180
+  euler_bend_input_bottom:
+    x: 661
+    y: 757
+    rotation: 180
+  euler_bend_loopback:
+    x: 2049
+    y: 757
+    rotation: 0
+routes:
+  route_input_top_1:
+    links:
+      tapered_input_coupler_1,o1: euler_bend_input_top,o1
+  route_input_top_2:
+    links:
+      euler_bend_input_top,o2: mzi_no_heater_1,o2
+  route_input_bottom_1:
+    links:
+      tapered_input_coupler_2,o1: euler_bend_input_bottom,o1
+  route_input_bottom_2:
+    links:
+      euler_bend_input_bottom,o2: mzi_no_heater_1,o1
+  route_mzi1_mzi2_top:
+    links:
+      mzi_no_heater_1,o4: mzi_no_heater_2,o2
+  route_mzi1_mzi2_bottom:
+    links:
+      mzi_no_heater_1,o3: mzi_no_heater_2,o1
+  route_loopback_1:
+    links:
+      mzi_no_heater_2,o4: euler_bend_loopback,o1
+  route_loopback_2:
+    links:
+      euler_bend_loopback,o2: mzi_no_heater_2,o3

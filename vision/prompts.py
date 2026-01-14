@@ -224,6 +224,14 @@ Suffixes:
 
 *Example:* If a Coupler and Heater are both in B2, place one at `B2_W` and the other at `B2_E`.
 
+### 3a. ROTATION & ORIENTATION LOGIC
+All components in the manifest are defined by default as **Horizontal (West-to-East)** flow.
+- **Input ports** are on the Left.
+- **Output ports** are on the Right.
+- **Default Rotation:** 0
+
+- If you see a small arrow drawn next to a component, align the component's 'Forward' direction (Input $\rightarrow$ Output) with that arrow.
+
 ### 4. ROUTING RULES (THE "ZERO DANGLING PORT" LAW)
 You must generate a `routes` section.
 **CRITICAL:** Every port defined in the `COMPONENT_DEFINITIONS` must be accounted for.

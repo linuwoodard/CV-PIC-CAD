@@ -5,119 +5,72 @@ instances:
   grating_coupler_2:
     component: grating_coupler
     settings: {}
-  directional_coupler_1:
-    component: directional_coupler
+  mzi_heater_1:
+    component: mzi_heater
     settings: {}
-  loop_mirror_1:
-    component: loop_mirror
+  mzi_heater_2:
+    component: mzi_heater
     settings: {}
-  euler_bend_input_1a:
-    component: euler_bend
+  racetrack_resonator_1:
+    component: racetrack_resonator
     settings: {}
-  euler_bend_input_1b:
-    component: euler_bend
+  terminator_1:
+    component: terminator
     settings: {}
-  euler_bend_input_2a:
-    component: euler_bend
-    settings: {}
-  euler_bend_input_2b:
-    component: euler_bend
-    settings: {}
-  euler_bend_loop_1a:
-    component: euler_bend
-    settings: {}
-  euler_bend_loop_1b:
-    component: euler_bend
-    settings: {}
-  euler_bend_loop_2a:
-    component: euler_bend
-    settings: {}
-  euler_bend_loop_2b:
-    component: euler_bend
+  terminator_2:
+    component: terminator
     settings: {}
 placements:
   grating_coupler_1:
     x: 917
-    y: 323
+    y: 269
     rotation: 270
   grating_coupler_2:
     x: 1251
-    y: 323
+    y: 269
     rotation: 270
-  directional_coupler_1:
+  mzi_heater_1:
     x: 1084
-    y: 970
-    rotation: 0
-  loop_mirror_1:
+    y: 754
+    rotation: 270
+  mzi_heater_2:
     x: 1084
-    y: 1833
-    rotation: 0
-  euler_bend_input_1a:
-    x: 875
-    y: 485
-    rotation: 90
-  euler_bend_input_1b:
-    x: 875
-    y: 701
-    rotation: 0
-  euler_bend_input_2a:
-    x: 1292
-    y: 485
+    y: 1186
     rotation: 270
-  euler_bend_input_2b:
-    x: 1292
-    y: 701
-    rotation: 180
-  euler_bend_loop_1a:
-    x: 875
-    y: 1455
-    rotation: 90
-  euler_bend_loop_1b:
-    x: 875
-    y: 1563
-    rotation: 0
-  euler_bend_loop_2a:
-    x: 1292
-    y: 1455
+  racetrack_resonator_1:
+    x: 1084
+    y: 1617
     rotation: 270
-  euler_bend_loop_2b:
-    x: 1292
-    y: 1563
-    rotation: 180
+  terminator_1:
+    x: 1042
+    y: 1887
+    rotation: 0
+  terminator_2:
+    x: 1125
+    y: 1887
+    rotation: 0
 routes:
-  route_gc1_to_eb1a:
+  route_gc1_mzi1_o2:
     links:
-      grating_coupler_1,o1: euler_bend_input_1a,o1
-  route_eb1a_to_eb1b:
+      grating_coupler_1,o1: mzi_heater_1,o2
+  route_gc2_mzi1_o1:
     links:
-      euler_bend_input_1a,o2: euler_bend_input_1b,o1
-  route_eb1b_to_dc1_o2:
+      grating_coupler_2,o1: mzi_heater_1,o1
+  route_mzi1_o4_mzi2_o2:
     links:
-      euler_bend_input_1b,o2: directional_coupler_1,o2
-  route_gc2_to_eb2a:
+      mzi_heater_1,o4: mzi_heater_2,o2
+  route_mzi1_o3_mzi2_o1:
     links:
-      grating_coupler_2,o1: euler_bend_input_2a,o1
-  route_eb2a_to_eb2b:
+      mzi_heater_1,o3: mzi_heater_2,o1
+  route_mzi2_o4_racetrack1_o2:
     links:
-      euler_bend_input_2a,o2: euler_bend_input_2b,o1
-  route_eb2b_to_dc1_o4:
+      mzi_heater_2,o4: racetrack_resonator_1,o2
+  route_mzi2_o3_racetrack1_o1:
     links:
-      euler_bend_input_2b,o2: directional_coupler_1,o4
-  route_dc1_o1_to_eb_l1a:
+      mzi_heater_2,o3: racetrack_resonator_1,o1
+  route_racetrack1_o4_term1:
     links:
-      directional_coupler_1,o1: euler_bend_loop_1a,o1
-  route_eb_l1a_to_eb_l1b:
+      racetrack_resonator_1,o4: terminator_1,o1
+  route_racetrack1_o3_term2:
     links:
-      euler_bend_loop_1a,o2: euler_bend_loop_1b,o1
-  route_eb_l1b_to_lm1_o1:
-    links:
-      euler_bend_loop_1b,o2: loop_mirror_1,o1
-  route_dc1_o3_to_eb_l2a:
-    links:
-      directional_coupler_1,o3: euler_bend_loop_2a,o1
-  route_eb_l2a_to_eb_l2b:
-    links:
-      euler_bend_loop_2a,o2: euler_bend_loop_2b,o1
-  route_eb_l2b_to_lm1_o2:
-    links:
-      euler_bend_loop_2b,o2: loop_mirror_1,o2
+      racetrack_resonator_1,o3: terminator_2,o1

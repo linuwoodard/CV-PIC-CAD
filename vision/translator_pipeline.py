@@ -75,39 +75,39 @@ def send_to_vision_model(image_path: str, system_prompt: str = GRID_SYSTEM_PROMP
     user_prompt = "Analyze this image. Identify the optical components and their approximate grid locations."
     
     try:
-        import google.generativeai as genai
+        from google.genai import Client
     except ImportError:
-        raise ImportError("google-generativeai library not installed. Run: pip install google-generativeai")
+        raise ImportError("google-genai library not installed. Run: pip install google-genai")
     
     # Get API key from environment variable
     if not api_key:
         raise ValueError("GEMINI_API_KEY environment variable not set")
     
     try:
-        genai.configure(api_key=api_key)
-        
-        # Create model
-        model = genai.GenerativeModel('gemini-2.5-flash')
-        
-        # Build prompt (Gemini doesn't have separate system/user roles, so combine them)
-        full_prompt = user_prompt
-        if system_prompt:
-            full_prompt = system_prompt
-        
-        # Prepare content - decode base64 and create PIL Image
-        import PIL.Image
-        import io
-        
-        image_data = base64.b64decode(base64_image)
-        image = PIL.Image.open(io.BytesIO(image_data))
-        
-        # Make API call
-        response = model.generate_content([full_prompt, image])
-        
-        # Return raw response text
-        if not response.text:
-            raise ValueError("Empty response from Gemini API")
-        return response.text
+        # Initialize client with API key using context manager for proper cleanup
+        with Client(api_key=api_key) as client:
+            # Build prompt (Gemini doesn't have separate system/user roles, so combine them)
+            full_prompt = user_prompt
+            if system_prompt:
+                full_prompt = system_prompt
+            
+            # Prepare content - decode base64 and create PIL Image
+            import PIL.Image
+            import io
+            
+            image_data = base64.b64decode(base64_image)
+            image = PIL.Image.open(io.BytesIO(image_data))
+            
+            # Make API call with image and prompt
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=[full_prompt, image]
+            )
+            
+            # Return raw response text
+            if not response.text:
+                raise ValueError("Empty response from Gemini API")
+            return response.text
         
     except Exception as e:
         raise ConnectionError(f"API connection error: {str(e)}")

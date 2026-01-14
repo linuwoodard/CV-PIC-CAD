@@ -2,14 +2,13 @@ import gdsfactory as gf
 from pathlib import Path
 from pdk import mzi_no_heater, tapered_input_coupler
 
-def build_gds():
+def build_gds(circuit_path: str | Path) -> gf.Component:
     # 1. Resolve the File Path
     script_dir = Path(__file__).parent
-    yaml_path = script_dir.parent / "output" / "circuit.yaml"
+    circuit_full_path = script_dir / circuit_path
 
-    if not yaml_path.exists():
-        print(f"❌ Error: YAML file not found at: {yaml_path.absolute()}")
-        return
+    if not circuit_full_path.exists():
+        raise FileNotFoundError(f"Circuit file not found: {circuit_full_path}")
 
     # 2. Register Components to the Active PDK
     # FIX: Pass them as Keyword Arguments (name=function)
@@ -33,4 +32,4 @@ def build_gds():
     print(f"✅ Success! GDS saved to: {output_gds}")
 
 if __name__ == "__main__":
-    build_gds()
+    build_gds("output/circuit.yaml")

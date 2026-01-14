@@ -1,5 +1,5 @@
 import os
-import google.generativeai as genai
+from google.genai import Client
 from dotenv import load_dotenv
 
 
@@ -17,21 +17,22 @@ def test_gemini_connection():
 
     print(f"✅ Found API Key: {api_key[:5]}...{api_key[-4:]}")
 
-    # 2. Configure the API
+    # 2. Connect to the API
     try:
-        genai.configure(api_key=api_key)
-        
-        # 3. Send a simple 'Ping' (Text only, no image needed yet)
         print("📡 Connecting to Gemini API...")
-        model = genai.GenerativeModel('gemini-2.5-flash')
-        response = model.generate_content("Reply with exactly the word 'Pong'.")
-        
-        # 4. Check results
-        if response.text.strip() == "Pong":
-            print("✅ SUCCESS: API Connection established!")
-            print(f"   Response received: {response.text}")
-        else:
-            print(f"⚠️  Connected, but unexpected response: {response.text}")
+        with Client(api_key=api_key) as client:
+            # 3. Send a simple 'Ping' (Text only, no image needed yet)
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents="Reply with exactly the word 'Pong'."
+            )
+            
+            # 4. Check results
+            if response.text.strip() == "Pong":
+                print("✅ SUCCESS: API Connection established!")
+                print(f"   Response received: {response.text}")
+            else:
+                print(f"⚠️  Connected, but unexpected response: {response.text}")
 
     except Exception as e:
         print(f"\n❌ CONNECTION FAILED")

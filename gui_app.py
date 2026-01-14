@@ -28,6 +28,7 @@ from overlay_grid import overlay_grid_on_image
 from grid_tools import GridMapper
 
 
+
 class OpticalCircuitDigitizerGUI:
     """Main GUI application class."""
     

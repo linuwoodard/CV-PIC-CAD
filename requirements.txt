@@ -10,7 +10,7 @@ Pillow                # Required for Gemini image processing
 
 # AI & API Interaction
 openai                # If using GPT-4o
-google-generativeai   # If using Gemini 1.5 Pro
+google-genai          # If using Gemini
 pyyaml                # To parse the output from the AI
 
 # Utilities
