@@ -3,7 +3,9 @@ Optical Circuit Digitizer - Desktop GUI Application
 Simple tkinter interface for the vision pipeline.
 """
 
+import argparse
 import os
+import subprocess
 import threading
 import tkinter as tk
 from tkinter import filedialog
@@ -27,19 +29,18 @@ from prompts import GRID_SYSTEM_PROMPT_V3
 from overlay_grid import overlay_grid_on_image
 from grid_tools import GridMapper
 
-# Import GDS generation function
-sys.path.insert(0, str(Path(__file__).parent / "gdsGen"))
-from buildCircuit import build_gds
-
 
 
 class OpticalCircuitDigitizerGUI:
     """Main GUI application class."""
     
-    def __init__(self, root):
+    def __init__(self, root, bypass_llm=False):
         self.root = root
         self.root.title("Optical Circuit Digitizer")
         self.root.geometry("800x600")
+        
+        # LLM bypass flag
+        self.bypass_llm = bypass_llm
         
         # Variable to store selected filename
         self.selected_filename = tk.StringVar(value="No file selected")
@@ -224,7 +225,7 @@ class OpticalCircuitDigitizerGUI:
             return
         
         # Update status
-        self.update_status("Analyzing Image... (This may take a few seconds)")
+        self.update_status("Analyzing Image... (This shit might take a sec.)")
         
         # Disable button during processing
         self.select_button.config(state="disabled")
@@ -256,8 +257,11 @@ class OpticalCircuitDigitizerGUI:
             # Construct enhanced prompt with examples
             enhanced_prompt = construct_prompt_with_examples(GRID_SYSTEM_PROMPT_V3)
             
-            # Send to vision model
-            response = send_to_vision_model(str(output_image_path), system_prompt=enhanced_prompt)
+            # Send to vision model (or bypass if flag is set)
+            if self.bypass_llm:
+                response = "Hello! LLM Bypass Here. Toodleloo!"
+            else:
+                response = send_to_vision_model(str(output_image_path), system_prompt=enhanced_prompt)
             
             # Parse and convert grid references (but don't save file yet)
             input_path = Path(image_path)
@@ -305,27 +309,28 @@ class OpticalCircuitDigitizerGUI:
         yaml_content = self.yaml_text.get("1.0", tk.END)
         
         # Create output directory if it doesn't exist
-        output_dir = Path(__file__).parent / "output"
+        project_root = Path(__file__).resolve().parent
+        output_dir = project_root / "output"
         output_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Determine filename based on current image
-        if self.current_file:
-            image_path = Path(self.current_file)
-            image_name = image_path.stem  # Get filename without extension
-            filename = f"circuit_{image_name}.yaml"
+
+        # Determine filename based on GUI filename label (or fall back)
+        label_text = self.selected_filename.get()
+        if label_text and label_text != "No file selected":
+            image_name = Path(label_text).stem
         else:
-            filename = "circuit.yaml"  # Fallback if no image selected
-        
-        # Save to output/circuit_<image_name>.yaml
-        output_file = output_dir / filename
-        with open(output_file, "w", encoding="utf-8") as f:
+            image_name = "custom"
+        filename = f"circuit_{image_name}.yaml"
+
+        # Absolute path where we save the YAML
+        yaml_output_path = output_dir / filename
+        with open(yaml_output_path, "w", encoding="utf-8") as f:
             f.write(yaml_content)
         
         # Update status
         self.update_status(f"YAML saved. Generating GDS file...")
         
         # Print confirmation
-        print(f"YAML saved successfully to: {output_file}")
+        print(f"YAML saved successfully to: {yaml_output_path}")
         
         # Disable button during GDS generation
         self.generate_button.config(state="disabled")
@@ -333,29 +338,61 @@ class OpticalCircuitDigitizerGUI:
         # Generate GDS file in a separate thread to avoid blocking UI
         thread = threading.Thread(
             target=self._generate_gds_thread,
-            args=(output_file,),
+            # Pass both the absolute path (for locating outputs) and the filename
+            # so the builder can be called with a relative path.
+            args=(yaml_output_path, filename),
             daemon=True
         )
         thread.start()
     
-    def _generate_gds_thread(self, yaml_file: Path):
-        """Background thread to generate GDS file from saved YAML."""
+    def _generate_gds_thread(self, yaml_file: Path, yaml_filename: str):
+        """Background thread to generate GDS file from saved YAML via subprocess.
+
+        Uses a relative path (e.g., 'output/circuit_<name>.yaml') as the argument
+        to gdsGen/buildCircuit.py, while still resolving absolute paths locally
+        for locating outputs.
+        """
         try:
-            # Calculate relative path from project root to the YAML file
-            project_root = Path(__file__).parent
-            relative_path = yaml_file.relative_to(project_root)
-            
-            # Call the GDS generation function with the relative path
-            result = build_gds(str(relative_path))
-            
-            if result is not None:
-                # Update UI on main thread with success
-                gds_file = yaml_file.with_suffix(".gds")
-                self.root.after(0, self._on_gds_generation_complete, True, None, gds_file)
-            else:
-                # Update UI on main thread with error
-                self.root.after(0, self._on_gds_generation_complete, False, "GDS generation returned None", None)
+            project_root = Path(__file__).resolve().parent
+            yaml_path = Path(yaml_file).resolve()
+            builder_script = (project_root / "gdsGen" / "buildCircuit.py").resolve()
+
+            # Relative path passed to the builder (from project root)
+            relative_yaml_arg = Path("output") / yaml_filename
+
+            # Run build script using same interpreter (venv-safe)
+            result = subprocess.run(
+                [sys.executable, str(builder_script), str(relative_yaml_arg)],
+                cwd=str(project_root),
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                check=True,
+            )
+
+            # Print builder output for debugging
+            if result.stdout:
+                print(result.stdout)
+            if result.stderr:
+                print(result.stderr, file=sys.stderr)
+
+            # buildCircuit.py writes to <repo>/gdsOutputs/<yaml_name>.gds
+            gds_file = project_root / "gdsOutputs" / yaml_path.with_suffix(".gds").name
+            self.root.after(0, self._on_gds_generation_complete, True, None, gds_file)
                 
+        except subprocess.CalledProcessError as e:
+            stdout = e.stdout or ""
+            stderr = e.stderr or ""
+            error_msg = (
+                "GDS build failed.\n\n"
+                f"Command: {e.cmd}\n\n"
+                f"STDOUT:\n{stdout}\n\n"
+                f"STDERR:\n{stderr}"
+            )
+            print(error_msg)
+            # Update UI on main thread with error
+            self.root.after(0, self._on_gds_generation_complete, False, error_msg, None)
         except Exception as e:
             error_msg = f"Error generating GDS: {str(e)}"
             print(error_msg)
@@ -399,8 +436,16 @@ class OpticalCircuitDigitizerGUI:
 
 def main():
     """Main entry point for the GUI application."""
+    parser = argparse.ArgumentParser(description="Optical Circuit Digitizer GUI")
+    parser.add_argument(
+        "--bypass-llm",
+        action="store_true",
+        help="Bypass LLM vision model calls (for testing/debugging)"
+    )
+    args = parser.parse_args()
+    
     root = tk.Tk()
-    app = OpticalCircuitDigitizerGUI(root)
+    app = OpticalCircuitDigitizerGUI(root, bypass_llm=args.bypass_llm)
     root.mainloop()
 
 

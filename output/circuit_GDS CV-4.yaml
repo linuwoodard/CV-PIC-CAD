@@ -1,51 +1,51 @@
 instances:
-  mzi_heater_1:
+  mzi_central:
     component: mzi_no_heater
     settings: {}
-  tapered_input_coupler_1:
-    component: tapered_input_coupler
+  terminator_top_left:
+    component: terminator
     settings: {}
-  tapered_input_coupler_2:
-    component: tapered_input_coupler
+  terminator_top_right:
+    component: terminator
     settings: {}
-  tapered_input_coupler_3:
-    component: tapered_input_coupler
+  terminator_bottom_left:
+    component: terminator
     settings: {}
-  tapered_input_coupler_4:
-    component: tapered_input_coupler
+  terminator_bottom_right:
+    component: terminator
     settings: {}
 placements:
-  mzi_heater_1:
-    x: 750
-    y: 970
+  mzi_central:
+    x: 917
+    y: 1186
     rotation: 90
-  tapered_input_coupler_1:
+  terminator_top_left:
     x: 583
     y: 323
-    rotation: 270
-  tapered_input_coupler_2:
+    rotation: 0
+  terminator_top_right:
     x: 1084
     y: 323
-    rotation: 270
-  tapered_input_coupler_3:
+    rotation: 0
+  terminator_bottom_left:
     x: 583
     y: 1833
-    rotation: 90
-  tapered_input_coupler_4:
+    rotation: 0
+  terminator_bottom_right:
     x: 1084
     y: 1833
-    rotation: 90
+    rotation: 0
 routes:
-  route_top_left_input:
+  route_input_top_left:
     links:
-      tapered_input_coupler_1,o1: mzi_heater_1,o1
-  route_top_right_input:
+      terminator_top_left,o1: mzi_central,o2
+  route_input_top_right:
     links:
-      tapered_input_coupler_2,o1: mzi_heater_1,o2
-  route_bottom_left_output:
+      terminator_top_right,o1: mzi_central,o4
+  route_output_bottom_left:
     links:
-      mzi_heater_1,o3: tapered_input_coupler_3,o1
-  route_bottom_right_output:
+      terminator_bottom_left,o1: mzi_central,o1
+  route_output_bottom_right:
     links:
-      mzi_heater_1,o4: tapered_input_coupler_4,o1
+      terminator_bottom_right,o1: mzi_central,o3
 
