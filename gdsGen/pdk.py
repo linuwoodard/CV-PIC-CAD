@@ -380,3 +380,239 @@ def racetrack_resonator(
     c.add_port("o4", port=b_out.ports["o2"])
     
     return c
+
+@gf.cell
+def ring_resonator(
+    radius: float = 200.0,
+    isDoubleSided: bool = True,
+    couplingGap: float = 1.0,
+    wgWidth: float = 1.2,
+    ringWgWidth: float = 1.2,
+    **kwargs
+) -> gf.Component:
+    """
+    A simple Ring Resonator with straight bus waveguides.
+    
+    Args:
+        radius: Radius of the ring (center to center of waveguide).
+        isDoubleSided: If True, adds a top drop port. If False, only creates bottom bus.
+        couplingGap: Gap between the ring and the bus waveguides.
+        wgWidth: Width of the straight bus waveguides.
+        ringWgWidth: Width of the ring waveguide.
+    """
+    c = gf.Component()
+    
+    # Define Cross Sections
+    xs_bus = gf.cross_section.strip(width=wgWidth)
+    xs_ring = gf.cross_section.strip(width=ringWgWidth)
+    
+    # 1. Create the Ring
+    # FIX: Use gf.path.euler with p=0 (circular) to generate the loop.
+    # angle=360 makes a full circle. 
+    # use_eff=False ensures 'radius' is the physical radius.
+    path_ring = gf.path.euler(radius=radius, angle=360, p=0, use_eff=False)
+    
+    ring = c << path_ring.extrude(xs_ring)
+    
+    # Center the ring at (0,0)
+    # The path generates off-center (starting at 0,0), so we force 
+    # the center of the component's bounding box to (0,0).
+    ring.x = 0
+    ring.y = 0
+    
+    # 2. Geometry Calculations
+    # Bus Y position = +/- (Radius + Gap + (RingWidth/2) + (BusWidth/2))
+    # We measure from center (0,0).
+    bus_offset = radius + (ringWgWidth / 2) + couplingGap + (wgWidth / 2)
+    
+    bus_length = (2 * radius) + 100.0 # Make bus slightly longer than the ring
+    
+    # 3. Bottom Bus (Always present)
+    bus_bot = c << gf.components.straight(length=bus_length, cross_section=xs_bus)
+    bus_bot.x = 0
+    bus_bot.y = -bus_offset
+    
+    c.add_port("o1", port=bus_bot.ports["o1"]) # Input (West)
+    c.add_port("o2", port=bus_bot.ports["o2"]) # Through (East)
+    
+    # 4. Top Bus (Conditional)
+    if isDoubleSided:
+        bus_top = c << gf.components.straight(length=bus_length, cross_section=xs_bus)
+        bus_top.x = 0
+        bus_top.y = bus_offset
+        
+        c.add_port("o3", port=bus_top.ports["o2"]) # Drop (East)
+        c.add_port("o4", port=bus_top.ports["o1"]) # Add (West)
+        
+    else:
+        # Create Phantom Ports
+        # These allow routers to see ports even if the geometry isn't there.
+        
+        # Port o4 (Top West)
+        c.add_port(
+            name="o4",
+            center=(-bus_length/2, bus_offset),
+            width=wgWidth,
+            orientation=180,
+            layer=xs_bus.layer
+        )
+        
+        # Port o3 (Top East)
+        c.add_port(
+            name="o3",
+            center=(bus_length/2, bus_offset),
+            width=wgWidth,
+            orientation=0,
+            layer=xs_bus.layer
+        )
+
+    return c
+
+    import numpy as np
+import gdsfactory as gf
+from gdsfactory.typings import LayerSpec
+
+# --- Helper Math Function (Mimics genFocusingStripe_LiSa) ---
+def _gen_focusing_stripe(
+    q: int,
+    neff: float,
+    theta_deg: float,
+    w: float,
+    theta_opening_deg: float,
+    lambda0: float = 1.55,
+    n_env: float = 1.44
+):
+    """
+    Generates the polygon points for a single focusing grating arc.
+    Math ported directly from MATLAB 'genFocusingStripe_LiSa'.
+    """
+    N = 40  # Resolution
+    phis = np.linspace(-theta_opening_deg/2, theta_opening_deg/2, N)
+    
+    # Pre-calculate constants
+    sin_theta = np.sin(np.radians(theta_deg))
+    
+    # 1. Left Arc (Inner radius of the hole)
+    points_left = []
+    for phi_deg in phis:
+        phi = np.radians(phi_deg)
+        # Radius equation from reference
+        r = (q * lambda0) / (neff - n_env * np.cos(phi) * sin_theta)
+        
+        # Convert to Cartesian (Focus is at 0,0)
+        # In MATLAB: p = [r*cosd(phi) - r - w/2; r*sind(phi)];
+        # The '-r' term shifts it so the curve center is near x=0 relative to the radius? 
+        # Actually, looking at the MATLAB code: 
+        #   myArc.translate(curr_x + pitch, curr_y) where curr_x starts at 0.
+        #   The loop uses q_min + ii.
+        # Let's trust the coordinate transform: x = r*cos(phi) - r
+        # This puts the "center" of the arc at x = -w/2 relative to 'r'
+        
+        x = r * np.cos(phi) - r - w/2
+        y = r * np.sin(phi)
+        points_left.append((x, y))
+        
+    # 2. Right Arc (Outer radius of the hole)
+    points_right = []
+    # Iterate backwards to close the polygon loop cleanly
+    for phi_deg in reversed(phis):
+        phi = np.radians(phi_deg)
+        r = (q * lambda0) / (neff - n_env * np.cos(phi) * sin_theta)
+        
+        x = r * np.cos(phi) - r + w/2
+        y = r * np.sin(phi)
+        points_right.append((x, y))
+        
+    return points_left + points_right
+
+@gf.cell
+def focusing_grating_coupler(
+    pitch: float = 1.16,
+    n_periods: int = 30,
+    duty_cycle_start: float = 0.8,
+    duty_cycle_end: float = 0.42,
+    wg_width: float = 1.2,
+    taper_width: float = 1.0,
+    focusing_length: float = 37.5,
+    defocus: float = -8.0,
+    grating_width: float = 20.0,
+    theta_deg: float = 20.0,
+    theta_opening_deg: float = 30.0,
+    lambda0: float = 1.55,
+    layer: LayerSpec = (1, 0),
+    **kwargs
+) -> gf.Component:
+    """
+    Focusing Grating Coupler matching MATLAB 'focusing_gratingcoupler_LiSa'.
+    """
+    c = gf.Component()
+
+    # 1. Derived Parameters
+    neff = lambda0/pitch + np.sin(np.radians(theta_deg))
+    q_min = round(focusing_length * (neff - np.sin(np.radians(theta_deg))) / lambda0)
+    duty_cycles = np.linspace(duty_cycle_start, duty_cycle_end, n_periods)
+
+    # 2. Generate Fanout Body Points (Trapezoid)
+    total_grating_len = pitch * n_periods
+    L_total = focusing_length + defocus + total_grating_len
+    
+    fanout_pts = [
+        (0, -taper_width/2),
+        (L_total, -grating_width/2),
+        (L_total, grating_width/2),
+        (0, taper_width/2)
+    ]
+    
+    # 3. Generate Hole Points
+    holes_polygons = []
+    
+    curr_x = 0
+    small_buffer = 1.5
+    hole_origin_x = focusing_length + defocus - small_buffer
+    
+    for i in range(n_periods):
+        dc = duty_cycles[i]
+        w_hole = (1.0 - dc) * pitch
+        q = q_min + (i + 1)
+        raw_pts = _gen_focusing_stripe(q, neff, theta_deg, w_hole, theta_opening_deg, lambda0)
+        
+        shift_x = hole_origin_x + curr_x + pitch
+        translated_pts = [(x + shift_x, y) for x, y in raw_pts]
+        holes_polygons.append(translated_pts)
+        curr_x += pitch
+
+    # 4. Boolean Subtraction
+    c_body = gf.Component()
+    c_body.add_polygon(fanout_pts, layer=layer)
+    
+    c_holes = gf.Component()
+    for pts in holes_polygons:
+        c_holes.add_polygon(pts, layer=layer)
+        
+    bool_component = gf.boolean(A=c_body, B=c_holes, operation="not", layer=layer)
+    c.add_ref(bool_component)
+
+    # 5. Input Taper (Geometric placement)
+    wg_max_len = 100.0
+    input_taper_len = max(10.0, wg_max_len - L_total)
+    
+    # We define width1 as TAPER_WIDTH (Wide) and width2 as WG_WIDTH (Narrow)
+    # Default taper: o1=width1 @ (0,0), o2=width2 @ (length,0)
+    taper = gf.components.taper(
+        length=input_taper_len,
+        width1=taper_width,  # Wide end (at grating interface)
+        width2=wg_width,     # Narrow end (input)
+        layer=layer
+    )
+    t_ref = c << taper
+    
+    # Mirror X: 
+    # o1 (Wide) stays at (0,0) (Correct, touches fanout)
+    # o2 (Narrow) moves to (-length, 0) (Correct, becomes input)
+    t_ref.mirror_x()
+    
+    # 6. Expose Port
+    # t_ref.ports["o2"] is the narrow end at x = -length
+    c.add_port("o1", port=t_ref.ports["o2"])
+
+    return c
