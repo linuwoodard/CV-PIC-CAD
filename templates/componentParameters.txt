@@ -1,0 +1,88 @@
+# GDSFACTORY PDK COMPONENT REGISTRY
+# ==============================================================================
+# This file outlines the available components in the PDK, their parameters, 
+# default values, and port configurations. Use this schema when generating 
+# YAML netlists to ensure parameters match the Python definitions.
+
+# ------------------------------------------------------------------------------
+# COMPONENT: tapered_input_coupler
+# ------------------------------------------------------------------------------
+# Description: 
+#   Creates an input coupler with an optional dicing anchor 'tab' to prevent 
+#   tip damage during dicing.
+#   Structure: [Tab] -> [Dicing Clearance] -> [Main Taper]
+#
+# Ports:
+#   - o1: Input (Tab/Dicing side, width = 5.0um or taperWidth)
+#   - o2: Output (Circuit side, width = wgWidth)
+#
+# Parameters:
+#   - taperLength     (float): Length of the main adiabatic taper. Default: 200.0
+#   - taperWidth      (float): Width of the narrow tip (start of main taper). Default: 0.5
+#   - wgWidth         (float): Width of the main waveguide (end of main taper). Default: 1.2
+#   - dicingClearance (float): Length of the narrow safety straight section. Default: 50.0
+#   - isTab           (bool) : If True, adds a 5um wide dicing tab block. Default: True
+
+# ------------------------------------------------------------------------------
+# COMPONENT: mzi_no_heater
+# ------------------------------------------------------------------------------
+# Description:
+#   Asymmetric Mach-Zehnder Interferometer (MZI) without heaters.
+#   One arm is straight (bottom), one arm bends (top).
+#   Includes input/output fan-outs to separate ports.
+#
+# Ports:
+#   - o1: Input Bottom (West)
+#   - o2: Input Top (West)
+#   - o3: Output Bottom (East)
+#   - o4: Output Top (East)
+#
+# Parameters:
+#   - wg_width        (float): Waveguide width. Default: 1.2
+#   - coupler_length  (float): Length of the directional couplers. Default: 255.0
+#   - coupler_gap     (float): Gap between waveguides in the coupler. Default: 1.0
+#   - mzi_arm_length  (float): Length of the straight section in the arms. Default: 3400.0
+#   - arm_spacing     (float): Vertical spacing between the two arms. Default: 40.0
+#   - bend_radius     (float): Effective radius of the Euler bends. Default: 210.0
+#   - bend_angle      (float): Angle of the S-bend transitions (degrees). Default: 20.0
+#   - bend_p          (float): Euler spiral parameter (0=circular, 0.5=euler, 1.0=smooth). Default: 0.5
+
+# ------------------------------------------------------------------------------
+# COMPONENT: euler_bend
+# ------------------------------------------------------------------------------
+# Description:
+#   A standalone Euler bend with strict geometric control using gf.path.
+#
+# Ports:
+#   - o1: Input
+#   - o2: Output
+#
+# Parameters:
+#   - radius          (float): Effective bend radius (um). Default: 210.0
+#   - angle           (float): Total turn angle (degrees). Default: 20.0
+#   - p               (float): Euler spiral parameter. Default: 0.5
+#   - width           (float): Waveguide width. Default: 1.2
+
+# ------------------------------------------------------------------------------
+# COMPONENT: racetrack_resonator
+# ------------------------------------------------------------------------------
+# Description:
+#   Racetrack Resonator with Euler bends and "Bus" style couplers.
+#   Couplers are offset from the racetrack straights by 'wgSpacing'.
+#
+# Ports:
+#   - o1: Top Bus Input (West)
+#   - o2: Top Bus Output (East)
+#   - o3: Bottom Bus Input (West)
+#   - o4: Bottom Bus Output (East)
+#
+# Parameters:
+#   - straightLength  (float): Length of the racetrack straight sections. Default: 12000.0
+#   - rtBendRadius    (float): Radius of the 180-degree racetrack bends. Default: 210.0
+#   - rtEulerP        (float): Euler p-factor for the racetrack bends. Default: 0.5
+#   - couplingGap     (float): Gap between bus coupler and racetrack. Default: 1.0
+#   - couplingLength  (float): Length of the straight coupling region. Default: 600.0
+#   - bendAngle       (float): Angle of the S-bends for the bus routing. Default: 20.0
+#   - couplerEulerP   (float): Euler p-factor for the bus S-bends. Default: 0.5
+#   - wgSpacing       (float): Vertical distance from coupling edge to port. Default: 30.0
+#   - wgWidth         (float): Waveguide width. Default: 1.2
