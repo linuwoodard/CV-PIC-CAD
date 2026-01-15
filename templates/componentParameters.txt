@@ -86,3 +86,49 @@
 #   - couplerEulerP   (float): Euler p-factor for the bus S-bends. Default: 0.5
 #   - wgSpacing       (float): Vertical distance from coupling edge to port. Default: 30.0
 #   - wgWidth         (float): Waveguide width. Default: 1.2
+
+# ------------------------------------------------------------------------------
+# COMPONENT: ring_resonator
+# ------------------------------------------------------------------------------
+# Description:
+#   A simple circular ring resonator with straight bus waveguides.
+#   Supports both single-bus (All-Pass) and double-bus (Add-Drop) configurations.
+#   If isDoubleSided=False, ports o3/o4 are created as "phantom" ports for compatibility.
+#
+# Ports:
+#   - o1: Input (Bottom Bus West)
+#   - o2: Through (Bottom Bus East)
+#   - o3: Drop (Top Bus East) [Active if isDoubleSided=True, Phantom otherwise]
+#   - o4: Add (Top Bus West)  [Active if isDoubleSided=True, Phantom otherwise]
+#
+# Parameters:
+#   - radius          (float): Radius of the ring (center to center of waveguide). Default: 200.0
+#   - isDoubleSided   (bool) : If True, adds a top drop bus. If False, only creates bottom bus. Default: True
+#   - couplingGap     (float): Gap between the ring and the bus waveguides. Default: 1.0
+#   - wgWidth         (float): Width of the straight bus waveguides. Default: 1.2
+#   - ringWgWidth     (float): Width of the waveguide inside the ring. Default: 1.2
+
+# ------------------------------------------------------------------------------
+# COMPONENT: focusing_grating_coupler
+# ------------------------------------------------------------------------------
+# Description:
+#   Focusing Grating Coupler based on 'LiSa' design.
+#   Consists of a linear input taper leading to a trapezoidal fanout region
+#   with curved, focused etched holes.
+#
+# Ports:
+#   - o1: Input (Narrow end of the taper, facing the circuit)
+#
+# Parameters:
+#   - pitch             (float): Grating period/pitch (um). Default: 1.16
+#   - n_periods         (int)  : Number of grating teeth/periods. Default: 30
+#   - duty_cycle_start  (float): Duty cycle at the start (closest to focus). Default: 0.8
+#   - duty_cycle_end    (float): Duty cycle at the end (furthest from focus). Default: 0.42
+#   - wg_width          (float): Width of the input waveguide (um). Default: 1.2
+#   - taper_width       (float): Width of the fanout at the grating interface (um). Default: 1.0
+#   - focusing_length   (float): Focal length of the grating curves (um). Default: 37.5
+#   - defocus           (float): Adjustment to the focal point (um). Default: -8.0
+#   - grating_width     (float): Width of the fanout region at the end (um). Default: 20.0
+#   - theta_deg         (float): Incident angle of the fiber (degrees). Default: 20.0
+#   - theta_opening_deg (float): Opening angle of the fanout wedge (degrees). Default: 30.0
+#   - lambda0           (float): Center wavelength (um). Default: 1.55
