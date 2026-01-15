@@ -162,6 +162,24 @@ def parse_ai_response(response_text: str, mapper: GridMapper, output_path: Path 
         if not isinstance(placement_data, dict):
             continue
         
+        # Skip conversion for relative placement keys (to, port, dx, dy)
+        # These should remain as strings/numbers and not be converted
+        if 'to' in placement_data or 'port' in placement_data:
+            # This is a relative placement - skip grid conversion
+            # dx and dy should already be numbers, but ensure they're not strings
+            if 'dx' in placement_data and isinstance(placement_data['dx'], str):
+                try:
+                    placement_data['dx'] = float(placement_data['dx'])
+                except ValueError:
+                    print(f"Warning: Could not convert dx='{placement_data['dx']}' for instance '{instance_name}'")
+            if 'dy' in placement_data and isinstance(placement_data['dy'], str):
+                try:
+                    placement_data['dy'] = float(placement_data['dy'])
+                except ValueError:
+                    print(f"Warning: Could not convert dy='{placement_data['dy']}' for instance '{instance_name}'")
+            continue  # Skip grid conversion for relative placements
+        
+        # Only convert x/y for absolute placements (anchor component)
         # Check x value
         if 'x' in placement_data:
             x_value = placement_data['x']

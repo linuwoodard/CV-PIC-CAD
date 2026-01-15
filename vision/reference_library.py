@@ -52,15 +52,23 @@ routes:
   route_1:
     links:
       grating_coupler_1,o1: ring_1,o1
+    settings:
+      cross_section: strip_1p2
   route_2:
     links:
       ring_1,o3: grating_coupler_2,o1
+    settings:
+      cross_section: strip_1p2
   route_3:
     links:
       ring_1,o4: terminator_2,o1
+    settings:
+      cross_section: strip_1p2
   route_4:
     links:
       ring_1,o2: terminator_1,o1
+    settings:
+      cross_section: strip_1p2
 """
     },
     {
@@ -104,71 +112,100 @@ routes:
   route_top:
     links:
       mzi_loop,o4: loop_bend,o1
+    settings:
+      cross_section: strip_1p2
   route_btm:
     links:
       loop_bend,o2: mzi_loop,o3
+    settings:
+      cross_section: strip_1p2
   route_unused_input:
     links:
       mzi_loop,o2: terminator_1,o1
+    settings:
+      cross_section: strip_1p2
   route_unused_output:
     links:
       mzi_loop,o1: terminator_2,o1
+    settings:
+      cross_section: strip_1p2
 """
     },
     {
-        "name": "Simple MZI with Edge Couplers",
-        "description": "A simple MZI with tapered input couplers on all four ports.",
+        "name": "Simple MZI with Edge Couplers (Anchor Layout)",
+        "description": "A simple MZI with tapered input couplers using anchor/relative placement. MZI is the anchor at (0,0), tapers connect relative to it.",
         "yaml": """
-  instances:
-    mzi_no_heater_1:
-      component: mzi_no_heater
-      settings: {}
-    tapered_input_coupler_1:
-      component: tapered_input_coupler
-      settings: {}
-    tapered_input_coupler_2:
-      component: tapered_input_coupler
-      settings: {}
-    tapered_input_coupler_3:
-      component: tapered_input_coupler
-      settings: {}
-    tapered_input_coupler_4:
-      component: tapered_input_coupler
-      settings: {}
-  placements:
-    mzi_no_heater_1:
-      x: 750
-      y: 1186
-      rotation: 90
-    tapered_input_coupler_1:
-      x: 542
-      y: 323
-      rotation: 90
-    tapered_input_coupler_2:
-      x: 1125
-      y: 323
-      rotation: 90
-    tapered_input_coupler_3:
-      x: 542
-      y: 1833
-      rotation: 270
-    tapered_input_coupler_4:
-      x: 1125
-      y: 1833
-      rotation: 270
-  routes:
-    route_top_left_input:
-      links:
-        tapered_input_coupler_1,o1: mzi_heater_1,o1
-    route_top_right_input:
-      links:
-        tapered_input_coupler_2,o1: mzi_heater_1,o2
-    route_bottom_left_output:
-      links:
-        tapered_input_coupler_3,o1: mzi_heater_1,o3
-    route_bottom_right_output:
-      links:
-        tapered_input_coupler_4,o1: mzi_heater_1,o4
-  """
+instances:
+  mzi_1:
+    component: mzi_no_heater
+    settings: {}
+  taper_1:
+    component: tapered_input_coupler
+    settings: {}
+  taper_2:
+    component: tapered_input_coupler
+    settings: {}
+  taper_3:
+    component: tapered_input_coupler
+    settings: {}
+  taper_4:
+    component: tapered_input_coupler
+    settings: {}
+
+placements:
+  # ANCHOR: MZI at absolute position (0, 0)
+  mzi_1:
+    x: 0
+    y: 0
+    rotation: 0
+  
+  # RELATIVE: Tapers connect to MZI ports with offsets
+  taper_1:
+    to: mzi_1,o1
+    port: o2
+    dx: -200
+    dy: 0
+    rotation: 0
+  taper_2:
+    to: mzi_1,o2
+    port: o2
+    dx: -200
+    dy: 0
+    rotation: 0
+  taper_3:
+    to: mzi_1,o3
+    port: o2
+    dx: 200
+    dy: 0
+    rotation: 180
+  taper_4:
+    to: mzi_1,o4
+    port: o2
+    dx: 200
+    dy: 0
+    rotation: 180
+
+routes:
+  route_1:
+    links:
+      taper_1,o1: mzi_1,o1
+    settings:
+      cross_section: strip_1p2
+  route_2:
+    links:
+      taper_2,o1: mzi_1,o2
+    settings:
+      cross_section: strip_1p2
+  route_3:
+    links:
+      mzi_1,o3: taper_3,o1
+    settings:
+      cross_section: strip_1p2
+  route_4:
+    links:
+      mzi_1,o4: taper_4,o1
+    settings:
+      cross_section: strip_1p2
+"""
     },
 ]

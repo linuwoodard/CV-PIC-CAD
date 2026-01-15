@@ -66,11 +66,14 @@ Determine which "side" of the component the line touches.
 Example: If a line goes from the Right side of 'mzi_1' to the Left side of 'pad_1', write: mzi_1,o2: pad_1,o1
 
 3. Routing Schema: Output the routes as a dictionary of logical links:
+Routes are required to have a settings section with a cross_section key.  Default is strip_1p2.
 
 routes:
   route_1:
     links:
       component_A_name,port_name: component_B_name,port_name
+    settings:
+      cross_section: strip_<width>
 
 Available component types:
 - tapered_input_coupler: Input edge couplers with taper
@@ -213,16 +216,41 @@ COMPONENT_DEFINITIONS:
   directional_coupler: [o1, o2, o3, o4]
   ring_resonator: [o1, o2, o3, o4]
 
-### 3. PLACEMENT RULES (SUB-GRID PRECISION)
-To prevent components from overlapping, you must use **Quadrant Suffixes** for the coordinates.
-Format: `GridCell_Suffix`
+### 3. PLACEMENT RULES (RELATIVE ANCHOR LAYOUT)
+You must use a **Relative Anchor Layout** strategy for component placement.
 
-Suffixes:
-- `_C` : Center (Default)
-- `_N` / `_S` / `_E` / `_W` : Cardinal directions within the cell.
-- `_NE` / `_NW` / `_SE` / `_SW`: Corners of the cell.
+**ANCHOR COMPONENT (Required):**
+- One component MUST be placed at absolute coordinates: `x: 0, y: 0`
+- This is the "anchor" component that all other components reference
+- Typically this is the first input component or a central component like an MZI
 
-*Example:* If a Coupler and Heater are both in B2, place one at `B2_W` and the other at `B2_E`.
+**RELATIVE PLACEMENT (All Other Components):**
+- All other components must use the `to:` syntax to connect relative to another component
+- Format:
+  ```yaml
+  placements:
+    <instance_name>:
+      to: <target_instance>,<target_port>  # Connect TO this instance's port
+      port: <my_port>                       # Connect FROM my port
+      dx: <offset_x>                        # Relative offset in microns (can be negative)
+      dy: <offset_y>                        # Relative offset in microns (can be negative)
+      rotation: <0, 90, 180, 270>
+  ```
+
+**Example:**
+```yaml
+placements:
+  mzi_1:
+    x: 0      # ANCHOR: Absolute position
+    y: 0
+    rotation: 0
+  taper_1:
+    to: mzi_1,o1   # Connect to mzi_1's port o1
+    port: o2       # Connect FROM my port o2
+    dx: -200       # 200 microns to the left (negative = left/up)
+    dy: 0          # No vertical offset
+    rotation: 0
+```
 
 ### 3a. ROTATION & ORIENTATION LOGIC
 All components in the manifest are defined by default as **Horizontal (West-to-East)** flow.
@@ -256,9 +284,18 @@ instances:
     settings: {} 
 
 placements:
-  <unique_instance_name>:
-    x: <GridString> # e.g. "C3_NE"
-    y: <GridString> # e.g. "C3_NE"
+  # ANCHOR component (one component must use absolute coordinates)
+  <anchor_instance_name>:
+    x: 0      # Must be 0 for anchor
+    y: 0      # Must be 0 for anchor
+    rotation: <0, 90, 180, 270>
+  
+  # RELATIVE components (all other components use to: syntax)
+  <relative_instance_name>:
+    to: <target_instance>,<target_port>  # e.g. "mzi_1,o1"
+    port: <my_port>                       # e.g. "o2"
+    dx: <offset_x_microns>                # e.g. -200
+    dy: <offset_y_microns>                # e.g. 0
     rotation: <0, 90, 180, 270>
 
 routes:

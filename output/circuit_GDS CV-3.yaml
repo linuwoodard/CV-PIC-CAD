@@ -5,11 +5,8 @@ instances:
   grating_coupler_2:
     component: grating_coupler
     settings: {}
-  mzi_heater_1:
-    component: mzi_heater
-    settings: {}
-  mzi_heater_2:
-    component: mzi_heater
+  mzi_no_heater_1:
+    component: mzi_no_heater
     settings: {}
   racetrack_resonator_1:
     component: racetrack_resonator
@@ -20,57 +17,64 @@ instances:
   terminator_2:
     component: terminator
     settings: {}
+  terminator_3:
+    component: terminator
+    settings: {}
+  terminator_4:
+    component: terminator
+    settings: {}
 placements:
   grating_coupler_1:
     x: 917
-    y: 269
-    rotation: 270
+    y: 377
+    rotation: 0
   grating_coupler_2:
-    x: 1251
-    y: 269
-    rotation: 270
-  mzi_heater_1:
     x: 1084
-    y: 754
-    rotation: 270
-  mzi_heater_2:
+    y: 377
+    rotation: 0
+  mzi_no_heater_1:
     x: 1084
-    y: 1186
-    rotation: 270
+    y: 970
+    rotation: 90
   racetrack_resonator_1:
     x: 1084
     y: 1617
-    rotation: 270
+    rotation: 90
   terminator_1:
-    x: 1042
-    y: 1887
+    x: 1251
+    y: 1186
     rotation: 0
   terminator_2:
-    x: 1125
-    y: 1887
+    x: 1292
+    y: 1402
+    rotation: 0
+  terminator_3:
+    x: 875
+    y: 1833
+    rotation: 0
+  terminator_4:
+    x: 1292
+    y: 1833
     rotation: 0
 routes:
-  route_gc1_mzi1_o2:
+  route_gc1_mzi:
     links:
-      grating_coupler_1,o1: mzi_heater_1,o2
-  route_gc2_mzi1_o1:
+      grating_coupler_1,o1: mzi_no_heater_1,o1
+  route_gc2_mzi:
     links:
-      grating_coupler_2,o1: mzi_heater_1,o1
-  route_mzi1_o4_mzi2_o2:
+      grating_coupler_2,o1: mzi_no_heater_1,o2
+  route_mzi_rr:
     links:
-      mzi_heater_1,o4: mzi_heater_2,o2
-  route_mzi1_o3_mzi2_o1:
+      mzi_no_heater_1,o3: racetrack_resonator_1,o1
+  route_mzi_term1:
     links:
-      mzi_heater_1,o3: mzi_heater_2,o1
-  route_mzi2_o4_racetrack1_o2:
+      mzi_no_heater_1,o4: terminator_1,o1
+  route_rr_term2:
     links:
-      mzi_heater_2,o4: racetrack_resonator_1,o2
-  route_mzi2_o3_racetrack1_o1:
+      racetrack_resonator_1,o2: terminator_2,o1
+  route_rr_term3:
     links:
-      mzi_heater_2,o3: racetrack_resonator_1,o1
-  route_racetrack1_o4_term1:
+      racetrack_resonator_1,o3: terminator_3,o1
+  route_rr_term4:
     links:
-      racetrack_resonator_1,o4: terminator_1,o1
-  route_racetrack1_o3_term2:
-    links:
-      racetrack_resonator_1,o3: terminator_2,o1
+      racetrack_resonator_1,o4: terminator_4,o1
