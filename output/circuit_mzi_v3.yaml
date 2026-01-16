@@ -1,68 +1,69 @@
-name: mzi_vertical_circuit
+name: mzi_circuit_from_schematic
 instances:
-  mzi_1:
+  mzi_main:
     component: mzi_no_heater
-    settings: {}
-  taper_in_TL:
+    settings:
+      arm_spacing: 40.0
+  ec_TL:
     component: tapered_input_coupler
     settings: {}
-  taper_in_TR:
+  ec_BL:
     component: tapered_input_coupler
     settings: {}
-  taper_out_BL:
+  ec_BR:
     component: tapered_input_coupler
     settings: {}
-  taper_out_BR:
+  ec_TR:
     component: tapered_input_coupler
     settings: {}
 placements:
-  mzi_1:
+  mzi_main:
     x: 0
     y: 0
-    rotation: 90
-  taper_in_TL:
-    to: mzi_1,o1
+    rotation: 0
+  ec_BL:
+    to: mzi_main,o1
     port: o2
     rotation: 0
-    dx: 0.0
+    dx: -200.0
     dy: 0.0
-  taper_in_TR:
-    to: mzi_1,o2
+  ec_TL:
+    to: mzi_main,o2
     port: o2
     rotation: 0
-    dx: 0.0
+    dx: -200.0
     dy: 0.0
-  taper_out_BL:
-    to: mzi_1,o3
+  ec_BR:
+    to: mzi_main,o3
     port: o2
     rotation: 0
-    dx: 0.0
+    dx: 200.0
     dy: 0.0
-  taper_out_BR:
-    to: mzi_1,o4
+  ec_TR:
+    to: mzi_main,o4
     port: o2
     rotation: 0
-    dx: 0.0
+    dx: 200.0
     dy: 0.0
 routes:
-  route_in_TL:
+  route_BL_to_MZI_o1:
     links:
-      taper_in_TL,o2: mzi_1,o1
+      ec_BL,o2: mzi_main,o1
     settings:
       cross_section: strip_1p2
-  route_in_TR:
+  route_TL_to_MZI_o2:
     links:
-      taper_in_TR,o2: mzi_1,o2
+      ec_TL,o2: mzi_main,o2
     settings:
       cross_section: strip_1p2
-  route_out_BL:
+  route_MZI_o3_to_BR:
     links:
-      mzi_1,o3: taper_out_BL,o2
+      mzi_main,o3: ec_BR,o2
     settings:
       cross_section: strip_1p2
-  route_out_BR:
+  route_MZI_o4_to_TR:
     links:
-      mzi_1,o4: taper_out_BR,o2
+      mzi_main,o4: ec_TR,o2
     settings:
       cross_section: strip_1p2
 

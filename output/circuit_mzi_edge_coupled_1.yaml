@@ -1,0 +1,68 @@
+name: racetrack_coupler_circuit
+instances:
+  racetrack_resonator_1:
+    component: racetrack_resonator
+    settings: {}
+  tapered_input_coupler_1:
+    component: tapered_input_coupler
+    settings: {}
+  tapered_input_coupler_2:
+    component: tapered_input_coupler
+    settings: {}
+  focusing_grating_coupler_1:
+    component: focusing_grating_coupler
+    settings: {}
+  focusing_grating_coupler_2:
+    component: focusing_grating_coupler
+    settings: {}
+placements:
+  racetrack_resonator_1:
+    x: 0
+    y: 0
+    rotation: 0
+  tapered_input_coupler_1:
+    to: racetrack_resonator_1,o1
+    port: o2
+    rotation: 0
+    dx: 0.0
+    dy: -200.0
+  tapered_input_coupler_2:
+    to: racetrack_resonator_1,o3
+    port: o2
+    rotation: 0
+    dx: 0.0
+    dy: 0.0
+  focusing_grating_coupler_1:
+    to: racetrack_resonator_1,o2
+    port: o1
+    rotation: 0
+    dx: 0.0
+    dy: 0.0
+  focusing_grating_coupler_2:
+    to: racetrack_resonator_1,o4
+    port: o1
+    rotation: 0
+    dx: 0.0
+    dy: 0.0
+routes:
+  route_TL_input:
+    links:
+      tapered_input_coupler_1,o2: racetrack_resonator_1,o1
+    settings:
+      cross_section: strip_1p2
+  route_BL_input:
+    links:
+      tapered_input_coupler_2,o2: racetrack_resonator_1,o3
+    settings:
+      cross_section: strip_1p2
+  route_TR_output:
+    links:
+      racetrack_resonator_1,o2: focusing_grating_coupler_1,o1
+    settings:
+      cross_section: strip_1p2
+  route_BR_output:
+    links:
+      racetrack_resonator_1,o4: focusing_grating_coupler_2,o1
+    settings:
+      cross_section: strip_1p2
+

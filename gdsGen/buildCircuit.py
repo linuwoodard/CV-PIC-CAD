@@ -241,7 +241,11 @@ def build_gds(yaml_file_path):
     # Register Components
     pdk.register_cells(
         mzi_no_heater=mzi_no_heater, 
-        tapered_input_coupler=tapered_input_coupler
+        tapered_input_coupler=tapered_input_coupler,
+        euler_bend=euler_bend,
+        racetrack_resonator=racetrack_resonator,
+        ring_resonator=ring_resonator,
+        focusing_grating_coupler=focusing_grating_coupler
     )
     
     # Register Cross-Sections

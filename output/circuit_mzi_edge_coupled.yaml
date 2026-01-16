@@ -1,0 +1,69 @@
+name: mzi_vertical_with_terminators
+instances:
+  mzi_1:
+    component: mzi_no_heater
+    settings:
+      arm_spacing: 40.0
+  terminator_bl:
+    component: focusing_grating_coupler
+    settings: {}
+  terminator_tl:
+    component: focusing_grating_coupler
+    settings: {}
+  terminator_br:
+    component: focusing_grating_coupler
+    settings: {}
+  terminator_tr:
+    component: focusing_grating_coupler
+    settings: {}
+placements:
+  mzi_1:
+    x: 0
+    y: 0
+    rotation: 90
+  terminator_bl:
+    to: mzi_1,o1
+    port: o1
+    rotation: 0
+    dx: -200.0
+    dy: 0.0
+  terminator_tl:
+    to: mzi_1,o2
+    port: o1
+    rotation: 0
+    dx: -200.0
+    dy: 0.0
+  terminator_br:
+    to: mzi_1,o3
+    port: o1
+    rotation: 0
+    dx: 200.0
+    dy: 0.0
+  terminator_tr:
+    to: mzi_1,o4
+    port: o1
+    rotation: 0
+    dx: 200.0
+    dy: 0.0
+routes:
+  route_1_bl:
+    links:
+      mzi_1,o1: terminator_bl,o1
+    settings:
+      cross_section: strip_1p2
+  route_2_tl:
+    links:
+      mzi_1,o2: terminator_tl,o1
+    settings:
+      cross_section: strip_1p2
+  route_3_br:
+    links:
+      mzi_1,o3: terminator_br,o1
+    settings:
+      cross_section: strip_1p2
+  route_4_tr:
+    links:
+      mzi_1,o4: terminator_tr,o1
+    settings:
+      cross_section: strip_1p2
+

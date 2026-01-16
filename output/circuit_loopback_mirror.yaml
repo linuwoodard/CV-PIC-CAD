@@ -1,0 +1,63 @@
+name: mzi_with_grating_couplers_and_loopback
+instances:
+  mzi_1:
+    component: mzi_no_heater
+    settings:
+      arm_spacing: 200
+      mzi_arm_length: 1000.0
+  grating_coupler_1:
+    component: focusing_grating_coupler
+    settings: {}
+  grating_coupler_2:
+    component: focusing_grating_coupler
+    settings: {}
+  euler_bend_1:
+    component: euler_bend
+    settings:
+      radius: 91.7
+      angle: 180.0
+placements:
+  mzi_1:
+    x: 0
+    y: 0
+    rotation: 0
+  grating_coupler_1:
+    to: mzi_1,o2
+    port: o1
+    rotation: 0
+    dx: 0.0
+    dy: 0.0
+  grating_coupler_2:
+    to: mzi_1,o1
+    port: o1
+    rotation: 0
+    dx: 0.0
+    dy: 0.0
+  euler_bend_1:
+    to: mzi_1,o3
+    port: o1
+    rotation: 0
+    dx: 0.0
+    dy: 0.0
+routes:
+  route_gc1_mzi_top:
+    links:
+      grating_coupler_1,o1: mzi_1,o2
+    settings:
+      cross_section: strip_1p2
+  route_gc2_mzi_bottom:
+    links:
+      grating_coupler_2,o1: mzi_1,o1
+    settings:
+      cross_section: strip_1p2
+  route_mzi_euler_loopback_o3:
+    links:
+      mzi_1,o3: euler_bend_1,o1
+    settings:
+      cross_section: strip_1p2
+  route_mzi_euler_loopback_o4:
+    links:
+      euler_bend_1,o2: mzi_1,o4
+    settings:
+      cross_section: strip_1p2
+

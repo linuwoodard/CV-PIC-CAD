@@ -116,7 +116,8 @@ class OpticalCircuitDigitizerGUI:
             height=2,
             bg="#4CAF50",  # Green color
             fg="white",
-            font=("Arial", 10, "bold")
+            font=("Arial", 10, "bold"),
+            state="disabled"  # Initially disabled until YAML is parsed
         )
         
         self.cancel_button = tk.Button(
@@ -227,8 +228,9 @@ class OpticalCircuitDigitizerGUI:
         # Update status
         self.update_status("Analyzing Image... (This shit might take a sec.)")
         
-        # Disable button during processing
+        # Disable buttons during processing
         self.select_button.config(state="disabled")
+        self.generate_button.config(state="disabled")  # Keep disabled until YAML is parsed
         
         # E. Start Thread for vision API calls
         thread = threading.Thread(
@@ -290,18 +292,22 @@ class OpticalCircuitDigitizerGUI:
     
     def _update_yaml_text(self, yaml_string: str = None, error_msg: str = None):
         """Update YAML text widget (called from main thread via root.after)."""
-        # Re-enable button
+        # Re-enable select button
         self.select_button.config(state="normal")
         
         if error_msg:
             self.update_status(f"Error: {error_msg}")
             self.yaml_text.delete("1.0", tk.END)
             self.yaml_text.insert("1.0", f"# Error occurred during analysis:\n{error_msg}")
+            # Keep Generate CAD button disabled on error
+            self.generate_button.config(state="disabled")
         else:
             self.update_status("Analysis complete. Review and edit YAML if needed.")
             # Clear existing text and insert new YAML
             self.yaml_text.delete("1.0", tk.END)
             self.yaml_text.insert("1.0", yaml_string)
+            # Enable Generate CAD button now that YAML is parsed and displayed
+            self.generate_button.config(state="normal")
     
     def submit_action(self):
         """Get YAML text, save to output/circuit_<image_name>.yaml, then generate GDS."""
@@ -427,6 +433,9 @@ class OpticalCircuitDigitizerGUI:
         # Clear current file variable
         self.current_file = None
         self.selected_filename.set("No file selected")
+        
+        # Disable Generate CAD button when cleared
+        self.generate_button.config(state="disabled")
     
     def update_status(self, message: str):
         """Update the status bar message."""

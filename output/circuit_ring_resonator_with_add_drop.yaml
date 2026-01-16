@@ -1,0 +1,70 @@
+name: ring_resonator_double_bus
+instances:
+  ring_main:
+    component: ring_resonator
+    settings:
+      radius: 200.0
+      isDoubleSided: true
+  tapered_input_coupler_bottom_input:
+    component: tapered_input_coupler
+    settings: {}
+  tapered_input_coupler_bottom_output:
+    component: tapered_input_coupler
+    settings: {}
+  grating_coupler_top_input:
+    component: focusing_grating_coupler
+    settings: {}
+  grating_coupler_top_output:
+    component: focusing_grating_coupler
+    settings: {}
+placements:
+  ring_main:
+    x: 0
+    y: 0
+    rotation: 0
+  tapered_input_coupler_bottom_input:
+    to: ring_main,o1
+    port: o2
+    rotation: 0
+    dx: 0.0
+    dy: 0.0
+  tapered_input_coupler_bottom_output:
+    to: ring_main,o2
+    port: o2
+    rotation: 0
+    dx: 0.0
+    dy: 0.0
+  grating_coupler_top_input:
+    to: ring_main,o4
+    port: o1
+    rotation: 0
+    dx: 0.0
+    dy: 0.0
+  grating_coupler_top_output:
+    to: ring_main,o3
+    port: o1
+    rotation: 0
+    dx: 0.0
+    dy: 0.0
+routes:
+  route_bottom_input:
+    links:
+      tapered_input_coupler_bottom_input,o2: ring_main,o1
+    settings:
+      cross_section: strip_1p2
+  route_bottom_through:
+    links:
+      ring_main,o2: tapered_input_coupler_bottom_output,o2
+    settings:
+      cross_section: strip_1p2
+  route_top_add:
+    links:
+      grating_coupler_top_input,o1: ring_main,o4
+    settings:
+      cross_section: strip_1p2
+  route_top_drop:
+    links:
+      ring_main,o3: grating_coupler_top_output,o1
+    settings:
+      cross_section: strip_1p2
+

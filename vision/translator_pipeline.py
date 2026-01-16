@@ -19,6 +19,10 @@ from grid_tools import GridMapper
 from prompts import GRID_SYSTEM_PROMPT_V3
 from reference_library import EXAMPLES
 
+# Grid pitch in microns (distance between grid cells)
+# Can be overridden via GRID_PITCH_UM environment variable
+GRID_PITCH_UM = float(os.getenv("GRID_PITCH_UM", "200"))
+
 
 def construct_prompt_with_examples(base_prompt: str) -> str:
     """
@@ -162,11 +166,34 @@ def parse_ai_response(response_text: str, mapper: GridMapper, output_path: Path 
         if not isinstance(placement_data, dict):
             continue
         
-        # Skip conversion for relative placement keys (to, port, dx, dy)
-        # These should remain as strings/numbers and not be converted
+        # Handle relative placements with grid_dx/grid_dy conversion
         if 'to' in placement_data or 'port' in placement_data:
-            # This is a relative placement - skip grid conversion
-            # dx and dy should already be numbers, but ensure they're not strings
+            # This is a relative placement - convert grid_dx/grid_dy to dx/dy
+            if 'grid_dx' in placement_data:
+                grid_dx = placement_data['grid_dx']
+                try:
+                    # Convert grid units to microns
+                    dx_microns = int(grid_dx) * GRID_PITCH_UM
+                    placement_data['dx'] = dx_microns
+                    # Remove grid_dx after conversion
+                    del placement_data['grid_dx']
+                    print(f"Converted grid_dx={grid_dx} to dx={dx_microns} for instance '{instance_name}'")
+                except (ValueError, TypeError):
+                    print(f"Warning: Could not convert grid_dx='{grid_dx}' for instance '{instance_name}'")
+            
+            if 'grid_dy' in placement_data:
+                grid_dy = placement_data['grid_dy']
+                try:
+                    # Convert grid units to microns
+                    dy_microns = int(grid_dy) * GRID_PITCH_UM
+                    placement_data['dy'] = dy_microns
+                    # Remove grid_dy after conversion
+                    del placement_data['grid_dy']
+                    print(f"Converted grid_dy={grid_dy} to dy={dy_microns} for instance '{instance_name}'")
+                except (ValueError, TypeError):
+                    print(f"Warning: Could not convert grid_dy='{grid_dy}' for instance '{instance_name}'")
+            
+            # Legacy support: if dx/dy already exist (not grid_dx/grid_dy), ensure they're numbers
             if 'dx' in placement_data and isinstance(placement_data['dx'], str):
                 try:
                     placement_data['dx'] = float(placement_data['dx'])
